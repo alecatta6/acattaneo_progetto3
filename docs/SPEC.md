@@ -111,8 +111,15 @@ sui bulbi (esempio della traccia). `SystemClock` resta disponibile per l'uso rea
 
 Fonte unica di verità dei prodotti. Da essa derivano le schede prodotto e gli ordini.
 16 prodotti distribuiti sulle sei categorie della bio aziendale. Campi per prodotto: `sku`
-(formato `GT-<CAT>-<NNN>`, es. `GT-BUL-001`), `name`, `category`, `price_eur`, `perishable`
-(bool: sementi e bulbi sì), `kb_path`.
+(formato `GT-<CAT>-<NNN>`, es. `GT-BUL-001`), `name`, `short_description`, `category`,
+`price_eur`, `perishable` (bool: sementi e bulbi sì), `season`, `kb_path` (con estensione,
+ADR-006).
+
+`short_description` e `season` sono aggiunte rispetto alla stesura iniziale (ADR-034).
+`season` elenca le stagioni in cui il prodotto è rilevante — per bulbi e sementi la
+finestra di messa a dimora o semina, per gli altri il periodo d'uso — con valori
+identici a quelli restituiti da `clock.season_of()`; tutte e quattro significa
+«tutto l'anno».
 
 ### 4.3 Knowledge base (≥35 documenti, Markdown con frontmatter)
 

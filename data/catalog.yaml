@@ -4,127 +4,198 @@
 # cross-reference in the knowledge base derive from this file; validate_data.py enforces the
 # consistency. Prices are in euro, VAT included, as shown to the customer.
 #
-# sku        GT-<CAT>-<NNN>. CAT: SEM sementi, BUL bulbi, ATT attrezzi,
-#            VAS vasi, TER terricci, FER fertilizzanti.
-# perishable Seeds and bulbs only: they drive the 14-day returns rule (policies/resi_rimborsi.md).
-# kb_path    Path of the product sheet inside data/kb/, extension included (ADR-006).
+# sku                GT-<CAT>-<NNN>. CAT: SEM sementi, BUL bulbi, ATT attrezzi,
+#                    VAS vasi, TER terricci, FER fertilizzanti.
+# short_description  One line, customer-facing, in Italian. The product sheet expands on it
+#                    and must not contradict it (ADR-034).
+# perishable         Seeds and bulbs only: they drive the 14-day returns rule
+#                    (policies/resi_rimborsi.md).
+# season             Seasons in which the product is most relevant — for bulbs and seeds the
+#                    planting or sowing window, for the rest the period of use. Values match
+#                    exactly those returned by clock.season_of(), so the agent can compare them
+#                    against the business date. All four seasons means year-round.
+# kb_path            Path of the product sheet inside data/kb/, extension included (ADR-006).
 
 products:
 
   # --- Bulbi (3) -----------------------------------------------------------------
   - sku: GT-BUL-001
     name: Bulbi di tulipano Triumph, mix di colori (confezione da 10)
+    short_description: >-
+      Bulbi da fiore per la primavera, da mettere a dimora in autunno, adatti sia alla
+      piena terra sia al vaso profondo.
     category: bulbi
     price_eur: 7.90
     perishable: true
+    season: [autunno]
     kb_path: products/bulbi_tulipano_triumph.md
 
   - sku: GT-BUL-002
     name: Bulbi di narciso Tete-a-Tete (confezione da 15)
+    short_description: >-
+      Narcisi nani a fioritura precoce, resistenti al freddo e ignorati dai roditori,
+      ideali per bordure e ciotole da balcone.
     category: bulbi
     price_eur: 6.50
     perishable: true
+    season: [autunno]
     kb_path: products/bulbi_narciso_tete_a_tete.md
 
   - sku: GT-BUL-003
     name: Bulbi di giacinto orientale, blu (confezione da 5)
+    short_description: >-
+      Giacinti profumati a fiore compatto, coltivabili in vaso e adatti anche alla
+      forzatura in casa durante l'inverno.
     category: bulbi
     price_eur: 8.40
     perishable: true
+    season: [autunno]
     kb_path: products/bulbi_giacinto_orientale.md
 
   # --- Sementi (3) ---------------------------------------------------------------
   - sku: GT-SEM-001
     name: Semi di basilico genovese (bustina da 2 g)
+    short_description: >-
+      Basilico a foglia liscia della tradizione ligure, da seminare a primavera inoltrata
+      quando il freddo notturno e' passato.
     category: sementi
     price_eur: 2.90
     perishable: true
+    season: [primavera, estate]
     kb_path: products/semi_basilico_genovese.md
 
   - sku: GT-SEM-002
     name: Semi di misticanza invernale da taglio (bustina da 5 g)
+    short_description: >-
+      Miscuglio di insalate rustiche da taglio, seminabile fino a inizio autunno per
+      raccolti scalari durante la stagione fredda.
     category: sementi
     price_eur: 3.40
     perishable: true
+    season: [autunno, inverno]
     kb_path: products/semi_misticanza_invernale.md
 
   - sku: GT-SEM-003
     name: Semi di carota di Chioggia (bustina da 4 g)
+    short_description: >-
+      Varieta' tradizionale veneta a radice corta e tozza, adatta ai terreni pesanti e
+      alla coltivazione in cassone profondo.
     category: sementi
     price_eur: 2.60
     perishable: true
+    season: [primavera, estate]
     kb_path: products/semi_carota_chioggia.md
 
   # --- Attrezzi (3) --------------------------------------------------------------
   - sku: GT-ATT-001
     name: Forbici da potatura bypass, lama in acciaio giapponese
+    short_description: >-
+      Forbici a doppia lama per tagli netti sul legno vivo, con lama sostituibile e
+      impugnatura adatta anche alle mani piccole.
     category: attrezzi
     price_eur: 24.90
     perishable: false
+    season: [autunno, inverno]
     kb_path: products/forbici_potatura_bypass.md
 
   - sku: GT-ATT-002
     name: Trapiantatoio a mano in acciaio inox, manico in frassino
+    short_description: >-
+      Paletta stretta e graduata per trapianti e messa a dimora dei bulbi, in acciaio
+      inossidabile con manico in legno certificato.
     category: attrezzi
     price_eur: 12.50
     perishable: false
+    season: [primavera, estate, autunno, inverno]
     kb_path: products/trapiantatoio_acciaio_inox.md
 
   - sku: GT-ATT-003
     name: Annaffiatoio in zinco da 5 litri con cipolla removibile
+    short_description: >-
+      Annaffiatoio in zinco con doccetta estraibile, per passare dalla pioggia fine al
+      getto diretto senza cambiare attrezzo.
     category: attrezzi
     price_eur: 18.90
     perishable: false
+    season: [primavera, estate]
     kb_path: products/annaffiatoio_zinco_5l.md
 
   # --- Vasi (3) ------------------------------------------------------------------
   - sku: GT-VAS-001
     name: Vaso in terracotta naturale, diametro 24 cm
+    short_description: >-
+      Terracotta porosa non smaltata, che lascia traspirare il pane di terra e protegge
+      le radici dai ristagni.
     category: vasi
     price_eur: 14.90
     perishable: false
+    season: [primavera, estate, autunno, inverno]
     kb_path: products/vaso_terracotta_24.md
 
   - sku: GT-VAS-002
     name: Fioriera da balcone in resina, 60 cm, con sottovaso
+    short_description: >-
+      Fioriera leggera con sottovaso integrato e fori di drenaggio, pensata per i
+      parapetti e per chi coltiva solo in balcone.
     category: vasi
     price_eur: 19.90
     perishable: false
+    season: [primavera, estate]
     kb_path: products/fioriera_balcone_60.md
 
   - sku: GT-VAS-003
     name: Vaso autoirrigante con riserva d'acqua, diametro 30 cm
+    short_description: >-
+      Vaso con riserva e indicatore di livello, che copre alcuni giorni di assenza senza
+      lasciare la pianta a secco.
     category: vasi
     price_eur: 27.50
     perishable: false
+    season: [primavera, estate]
     kb_path: products/vaso_autoirrigante_30.md
 
   # --- Terricci (2) --------------------------------------------------------------
   - sku: GT-TER-001
     name: Terriccio universale torba-free, sacco da 50 litri
+    short_description: >-
+      Terriccio senza torba a base di fibra di legno e compost verde, per semine,
+      rinvasi e orto in vaso.
     category: terricci
     price_eur: 11.90
     perishable: false
+    season: [primavera, estate, autunno, inverno]
     kb_path: products/terriccio_universale_50l.md
 
   - sku: GT-TER-002
     name: Substrato specifico per bulbi, drenante, sacco da 20 litri
+    short_description: >-
+      Substrato alleggerito con sabbia e pomice, formulato per evitare il marciume dei
+      bulbi nei mesi umidi.
     category: terricci
     price_eur: 8.90
     perishable: false
+    season: [autunno]
     kb_path: products/substrato_bulbi_20l.md
 
   # --- Fertilizzanti (2) ---------------------------------------------------------
   - sku: GT-FER-001
     name: Concime granulare a cessione lenta per prato, secchio da 5 kg
+    short_description: >-
+      Granulare a cessione controllata per il tappeto erboso, con due distribuzioni
+      all'anno a inizio primavera e a inizio autunno.
     category: fertilizzanti
     price_eur: 22.90
     perishable: false
+    season: [primavera, autunno]
     kb_path: products/concime_granulare_prato_5kg.md
 
   - sku: GT-FER-002
     name: Concime liquido per piante fiorite, flacone da 1 litro
+    short_description: >-
+      Concime liquido ricco di potassio da diluire nell'acqua di irrigazione, per
+      sostenere la fioritura di balcone e terrazzo.
     category: fertilizzanti
     price_eur: 7.50
     perishable: false
+    season: [primavera, estate]
     kb_path: products/concime_liquido_fiorite_1l.md

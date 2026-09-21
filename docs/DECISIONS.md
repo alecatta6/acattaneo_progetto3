@@ -511,4 +511,27 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   calibrazione della metrica su risposte brevi in italiano: va tenuto d'occhio in fase 7, dove
   un punteggio basso va attribuito alla causa giusta prima di "correggere" l'agente.
 
+## ADR-034 — `short_description` e `season` nel catalogo
+
+- **Contesto**: SPEC §4.2 prevedeva sei campi per prodotto. Scrivendo 16 schede prodotto a mano,
+  nulla avrebbe impedito che una scheda descrivesse il prodotto in modo diverso dal catalogo, o
+  che indicasse un periodo di semina incoerente con le guide stagionali.
+- **Decisione**: due campi in più.
+  - `short_description`: una riga rivolta al cliente, in italiano. La scheda prodotto la espande
+    e **non può contraddirla**; `validate_data.py` non può verificarlo semanticamente, ma il
+    campo rende la contraddizione evidente a chi scrive e a chi rivede.
+  - `season`: le stagioni in cui il prodotto è rilevante, con valori **identici** a quelli
+    restituiti da `clock.season_of()` (`primavera`, `estate`, `autunno`, `inverno`). Tutte e
+    quattro significa «tutto l'anno».
+- **Perché `season` conta più di quanto sembri**: il system prompt inietta la data di business
+  e la stagione corrente (SPEC §8). Con `season` nel catalogo, la stagionalità diventa un dato
+  **confrontabile dal codice** invece che una deduzione dell'LLM dal testo libero delle schede.
+  Alla business date del 12 ottobre risultano rilevanti 10 prodotti su 16, quindi le domande
+  stagionali dell'evaluation hanno materiale concreto su cui discriminare.
+- **Alternative scartate**: restare ai sei campi (allineamento affidato alla sola diligenza di
+  chi scrive 35 documenti); ricavare la stagione dal testo delle schede con un parsing (fragile,
+  e contrario ad ADR-002: se un dato può essere strutturato, va strutturato).
+- **Conseguenze**: `validate_data.py` verificherà che ogni `season` sia non vuota e contenga solo
+  valori ammessi, importandoli da `clock` invece di duplicarli. SPEC §4.2 aggiornata.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
