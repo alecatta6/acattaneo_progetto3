@@ -457,4 +457,32 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Conseguenze**: rende il costo per chiamata prevedibile e limita l'esposizione al `402`.
   Va aggiunta a SPEC §12 e a `.env.example`.
 
+## ADR-032 — Modelli a pagamento invece dei modelli gratuiti
+
+- **Contesto**: l'intero progetto potrebbe girare a costo zero. Il costo misurato è però
+  minimo: gli spike della fase 0 (circa trenta chiamate fra agente, tool calling, structured
+  output, memoria e RAGAS) sono costati **$0.0042**. Una esecuzione completa dell'evaluation
+  (20 conversazioni più i giudici, che fanno più chiamate interne per metrica) si stima sulle
+  200–300 chiamate, dell'ordine di **$1**; la fase 7 ne prevede due.
+- **Verifica della via gratuita**: interrogando il catalogo OpenRouter, dei 21 modelli `:free`
+  **6 supportano sia `tools` sia `structured_outputs`** (`qwen/qwen3.8-27b:free`,
+  `nvidia/nemotron-3-super-120b-a12b:free`, `nex-agi/nex-n2.5-pro:free` e altri), e due
+  espongono anche i `logprobs`. L'architettura di ADR-026/027 sopravvivrebbe: il problema non
+  è tecnico.
+- **Decisione**: acquistare credito (~$5) e usare modelli a pagamento.
+- **Alternative scartate**, con la ragione per ciascuna:
+  - *modelli `:free` su OpenRouter*: il limite verificato sull'account è **50 richieste al
+    giorno**, cioè 5–6 giorni di quota per ogni singola esecuzione dell'evaluation. Soprattutto,
+    i modelli `:free` vengono ruotati e ritirati con frequenza: il notebook consegnato, che deve
+    girare con "Esegui tutto" su un runtime pulito anche settimane dopo, potrebbe fallire davanti
+    a chi valuta. È un rischio sul deliverable, non sullo sviluppo.
+  - *piano gratuito di Google AI Studio*: limiti giornalieri plausibilmente molto più alti e
+    buon italiano, ma imporrebbe di ricablare RAGAS e DeepEval, perdendo il percorso nativo
+    verificato in ADR-024.
+  - *modello locale via Ollama*: gratuito e senza quote, ma non disponibile su Colab, che è
+    l'ambiente di consegna.
+- **Conseguenze**: la via gratuita non fa risparmiare cinque dollari, fa spendere giorni di
+  attesa e aggiunge un rischio sulla riproducibilità del deliverable. Il confronto è documentato
+  qui perché è una scelta ingegneristica motivata, non una resa al costo.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
