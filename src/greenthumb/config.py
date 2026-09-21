@@ -65,11 +65,15 @@ class Settings(BaseSettings):
     retrieval_top_k: int = Field(default=4, ge=1, le=20)
     # Calibrated in phase 2 on the real knowledge base; see docs/retrieval_calibration.md
     # and ADR-040. Expressed as cosine similarity, 1 - distance (ADR-021).
+    # No gt=0 constraint here on purpose: a field constraint fires before the validator
+    # below and would replace its actionable message with a generic one.
     retrieval_score_low: float = Field(
         default=0.813,
-        ge=0.0,
         le=1.0,
-        description="Below this, no document counts as relevant.",
+        description=(
+            "Below this, no document counts as relevant. Must be above zero: retrieval "
+            "always returns something, so a zero threshold silently accepts everything."
+        ),
     )
     retrieval_score_high: float = Field(
         default=0.864,
@@ -91,6 +95,36 @@ class Settings(BaseSettings):
         description="Explicit output cap on every model call. Without one LiteLLM requests "
         "65536 tokens and OpenRouter rejects the call with 402 (ADR-031).",
     )
+
+    @field_validator("retrieval_score_low")
+    @classmethod
+    def _low_is_a_real_threshold(cls, value: float) -> float:
+        """Reject a zero or near-zero relevance threshold.
+
+        Retrieval always returns its top-k, whatever the question: asked for the capital of
+        Japan it returns the fertiliser guide at 0.74 (ADR-040). A threshold at zero
+        therefore accepts every result as relevant and silently disables the only filter
+        standing between an off-topic question and a confidently sourced answer. Observed
+        in practice: a .env copied before phase 2 kept the placeholder 0.0 and overrode the
+        calibrated default without any visible symptom.
+
+        Args:
+            value: The candidate low threshold.
+
+        Returns:
+            The validated threshold.
+
+        Raises:
+            ValueError: If the threshold would accept everything.
+        """
+        if value <= 0.0:
+            raise ValueError(
+                f"GREENTHUMB_RETRIEVAL_SCORE_LOW={value} accetterebbe qualunque risultato "
+                "come rilevante, disattivando il filtro. Il valore calibrato e' 0.813: "
+                "vedi docs/retrieval_calibration.md. Rimuovi la riga dal .env per usare "
+                "il default, oppure impostala al valore calibrato."
+            )
+        return value
 
     @field_validator("retrieval_score_high")
     @classmethod

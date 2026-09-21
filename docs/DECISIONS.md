@@ -680,4 +680,45 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Conseguenze**: coperto da test che non caricano il modello di embedding — il chunking è
   logica pura e va testato come tale, senza scaricare 1,1 GB in CI.
 
+## ADR-043 — Una soglia di rilevanza a zero deve fallire, non passare in silenzio
+
+- **Contesto**: il tool RAG, appena scritto, ha riportato `threshold: 0.0` invece del valore
+  calibrato 0.813. Causa: il `.env` era stato copiato dal `.env.example` **prima** della fase 2
+  e conteneva ancora i segnaposto `GREENTHUMB_RETRIEVAL_SCORE_LOW=0.0`, che sovrascrivevano il
+  default calibrato promosso in `config.py`.
+- **Perché è grave**: il retrieval restituisce **sempre** i suoi top-k (ADR-040). Con soglia a
+  zero ogni risultato conta come rilevante, quindi «qual è la capitale del Giappone?» avrebbe
+  prodotto documenti "pertinenti", `sources` popolate con riferimenti irrilevanti e nessun cap
+  `low` sulla confidence. Il filtro era disattivato **senza alcun sintomo visibile**: il sistema
+  continuava a rispondere, semplicemente peggio.
+- **Decisione**: un validatore rifiuta `retrieval_score_low <= 0` con un messaggio che nomina il
+  valore calibrato, il documento che lo giustifica e le due azioni possibili (rimuovere la riga
+  dal `.env`, oppure impostarla al valore corretto). Valori diversi da zero restano liberi: si
+  vieta la disattivazione, non la taratura.
+- **Dettaglio implementativo non ovvio**: il vincolo `gt=0.0` sul `Field` era la prima stesura,
+  ma i vincoli di campo scattano **prima** dei validatori e sostituivano il messaggio utile con
+  un generico «Input should be greater than 0». Il vincolo è stato rimosso, con un commento che
+  spiega perché non va rimesso.
+- **Conseguenze**: coperto da test di regressione. Lezione generale: un valore di configurazione
+  che disattiva un presidio di sicurezza non deve essere un valore ammissibile.
+
+## ADR-044 — L'isolamento dei test vale per la sessione, non per il singolo test
+
+- **Contesto**: terza manifestazione dello stesso problema. ADR-025 aveva chiuso la via
+  dell'ambiente (`load_dotenv()` di DeepEval), ma `Settings` legge `.env` **da sé**: il `.env`
+  con la soglia a zero faceva fallire test che con le soglie non c'entravano nulla. Peggio, la
+  prima correzione — una fixture `autouse` di funzione — non bastava, perché **le fixture di
+  modulo girano prima di quelle di funzione**, e qualunque fixture che legga la configurazione a
+  livello di modulo arrivava prima dell'isolamento.
+- **Decisione**: una fixture `autouse` di **sessione** che stacca `Settings` dal file una volta
+  sola, prima di qualunque altra cosa, affiancata da quella di funzione che mantiene pulito
+  l'ambiente fra un test e l'altro.
+- **Conseguenze**: 133 test verdi, e verificato che reggono anche con il plugin DeepEval
+  **riattivato a forza**. I test unitari non dipendono più in alcun modo dalla configurazione
+  locale di chi li esegue: la CI, il portatile dello sviluppatore e Colab danno lo stesso esito.
+- **Lezione da citare nella relazione**: l'accoppiamento fra test e configurazione locale si
+  ripresenta da direzioni diverse — variabile d'ambiente, file letto direttamente, ordine di
+  esecuzione delle fixture. Va chiuso in modo esplicito e verificato, non dato per risolto dopo
+  il primo intervento.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->

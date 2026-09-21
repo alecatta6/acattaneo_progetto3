@@ -157,3 +157,28 @@ def test_judge_slug_strips_the_litellm_route_prefix() -> None:
 def test_judge_slug_is_a_no_op_without_a_route_prefix() -> None:
     """A plain identifier must pass through untouched, so a provider switch stays safe."""
     assert _settings(eval_model="openai/gpt-4.1").judge_model_slug == "openai/gpt-4.1"
+
+
+def test_zero_low_threshold_is_rejected() -> None:
+    """A zero threshold accepts everything, silently disabling the relevance filter.
+
+    Regression guard: a .env copied before the phase-2 calibration kept the 0.0
+    placeholder and overrode the calibrated default with no visible symptom.
+    """
+    with pytest.raises(ValidationError, match="0.813"):
+        _settings(retrieval_score_low=0.0)
+
+
+def test_env_can_still_override_with_a_real_threshold(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tuning the threshold must stay possible; only the disabling value is refused.
+
+    Args:
+        monkeypatch: Fixture used to set environment variables.
+    """
+    monkeypatch.setenv("GREENTHUMB_RETRIEVAL_SCORE_LOW", "0.75")
+    monkeypatch.setenv("GREENTHUMB_RETRIEVAL_SCORE_HIGH", "0.90")
+    settings = Settings(_env_file=None)
+    assert settings.retrieval_score_low == 0.75
+    assert settings.retrieval_score_high == 0.90
