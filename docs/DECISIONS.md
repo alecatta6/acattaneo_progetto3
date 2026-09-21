@@ -783,4 +783,57 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   misure**. Va riportato come esempio concreto di insidia ereditata dalla documentazione e
   smentita dalla misura sul proprio corpus.
 
+## ADR-047 — `RunnableConfig` va dichiarato senza default, altrimenti non viene iniettato
+
+- **Contesto**: il tool di escalation ha bisogno del `session_id` per l'idempotenza e per
+  `needs_human`, ma il modello **non deve poterlo scegliere, inventare od omettere**.
+  L'identificatore arriva quindi dal `RunnableConfig` (`configurable.thread_id`, che l'agente
+  imposta uguale al `session_id`), non dagli argomenti del tool.
+- **Trappola trovata alla prima esecuzione**: con la firma `config: RunnableConfig | None = None`
+  — che sembra la scrittura prudente — l'iniezione **non avviene**, e la funzione riceve `None`.
+  Nessun errore, nessun avviso: il `session_id` cadeva sul valore di ripiego e tutte le
+  conversazioni finivano in un'unica sessione condivisa, distruggendo sia l'idempotenza dei
+  ticket sia il flag `needs_human`.
+- **Misurato sulle quattro combinazioni**:
+
+  | Firma del parametro | Iniettato | Esposto nello schema |
+  |---|---|---|
+  | `config: RunnableConfig` (nessun default) | **sì** | no |
+  | `config: RunnableConfig \| None = None`, schema esplicito | no | no |
+  | `config: RunnableConfig` (nessun default), schema inferito | **sì** | no |
+  | `config: RunnableConfig \| None = None`, schema inferito | no | **sì, visibile al modello** |
+
+- **Decisione**: parametro annotato `RunnableConfig` **senza default**, con un commento nel
+  docstring che spiega perché non va aggiunto. L'ultima riga della tabella è il caso peggiore:
+  il default non solo disattiva l'iniezione, ma con schema inferito espone `config` fra gli
+  argomenti che il modello può riempire.
+- **Conseguenze**: coperto da due test, uno sull'isolamento fra sessioni e uno che verifica che
+  lo schema mostrato al modello contenga esattamente `reason`, `summary`, `order_id`. Da citare
+  nella relazione: è un caso da manuale di fallimento silenzioso in cui la scrittura difensiva
+  è quella sbagliata.
+
+## ADR-048 — Registro delle escalation separato dal tool, e duplicazione sorvegliata dei tempi
+
+- **Contesto**: `escalations.jsonl` non è un semplice log. `needs_human` è derivato da lì
+  (ADR-008), quindi il file è la risposta autorevole alla domanda «questa conversazione richiede
+  un operatore?».
+- **Decisione**: `escalations_repository.py`, speculare a `orders_repository.py` — il modulo
+  possiede il file, il tool resta sottile. Aggiunge un modulo rispetto all'elenco di SPEC §3, in
+  coerenza con «I/O ai bordi, logica pura al centro».
+- **Idempotenza per sessione *e* motivo**: un cliente che ripete un reclamo non genera un
+  secondo ticket, ma lo stesso cliente che segnala merce danneggiata **e** chiede un operatore ne
+  genera legittimamente due. Una riga malformata viene saltata invece di sollevare: un log
+  corrotto non deve impedire di rispondere a un cliente.
+- **Duplicazione deliberata e sorvegliata**: i tempi di presa in carico (4 ore lavorative per
+  `damaged_or_wrong_item` e `safety`, 1 giorno lavorativo per gli altri cinque) sono ripetuti nel
+  tool, perché un cliente a cui si comunica il numero di ticket deve sapere **nello stesso
+  respiro** quando sarà ricontattato, senza un secondo giro di retrieval. La duplicazione invita
+  alla divergenza, quindi un test verifica che quelle stesse formule compaiano ancora in
+  `policies/contatti_orari.md`, con un messaggio d'errore che spiega cosa è andato fuori
+  sincrono.
+- **Conseguenze**: è l'eccezione motivata alla regola seguita nel tool ordini, dove invece la
+  soglia dei 14 giorni **non** viene enunciata. Il criterio che distingue i due casi: qui il dato
+  serve a completare un'azione già decisa, là servirebbe a decidere, e una decisione va presa
+  sulla fonte, non su una copia.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
