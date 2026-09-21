@@ -64,7 +64,9 @@ acattaneo_progetto3/
 │   ├── generate_orders.py       # deterministico, seed fisso
 │   ├── validate_data.py         # controlli di coerenza KB ↔ catalogo ↔ ordini
 │   ├── build_index.py
-│   └── probe_retrieval.py       # calibrazione soglie (fase 2)
+│   ├── probe_retrieval.py       # calibrazione soglie (fase 2)
+│   ├── ablation_e5_prefixes.py  # ablazione sui prefissi e5 (ADR-046)
+│   └── demo_tools.py            # demo dei tre tool, senza LLM (fase 3)
 ├── src/greenthumb/
 │   ├── config.py                # Settings (pydantic-settings o dataclass)
 │   ├── clock.py                 # Clock protocol + FrozenClock / SystemClock
@@ -72,6 +74,7 @@ acattaneo_progetto3/
 │   ├── kb_loader.py             # lettura Markdown + frontmatter
 │   ├── retrieval.py             # chunking, embedding, Chroma, search
 │   ├── orders_repository.py     # accesso a orders.json
+│   ├── escalations_repository.py # registro dei ticket (ADR-048)
 │   ├── tools/
 │   │   ├── knowledge_base_tool.py
 │   │   ├── order_status_tool.py
