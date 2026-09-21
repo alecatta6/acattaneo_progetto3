@@ -1,0 +1,130 @@
+# GreenThumb Marketplace — product catalogue.
+#
+# Single source of truth for products (SPEC section 4.2). Product sheets, orders and every
+# cross-reference in the knowledge base derive from this file; validate_data.py enforces the
+# consistency. Prices are in euro, VAT included, as shown to the customer.
+#
+# sku        GT-<CAT>-<NNN>. CAT: SEM sementi, BUL bulbi, ATT attrezzi,
+#            VAS vasi, TER terricci, FER fertilizzanti.
+# perishable Seeds and bulbs only: they drive the 14-day returns rule (policies/resi_rimborsi.md).
+# kb_path    Path of the product sheet inside data/kb/, extension included (ADR-006).
+
+products:
+
+  # --- Bulbi (3) -----------------------------------------------------------------
+  - sku: GT-BUL-001
+    name: Bulbi di tulipano Triumph, mix di colori (confezione da 10)
+    category: bulbi
+    price_eur: 7.90
+    perishable: true
+    kb_path: products/bulbi_tulipano_triumph.md
+
+  - sku: GT-BUL-002
+    name: Bulbi di narciso Tete-a-Tete (confezione da 15)
+    category: bulbi
+    price_eur: 6.50
+    perishable: true
+    kb_path: products/bulbi_narciso_tete_a_tete.md
+
+  - sku: GT-BUL-003
+    name: Bulbi di giacinto orientale, blu (confezione da 5)
+    category: bulbi
+    price_eur: 8.40
+    perishable: true
+    kb_path: products/bulbi_giacinto_orientale.md
+
+  # --- Sementi (3) ---------------------------------------------------------------
+  - sku: GT-SEM-001
+    name: Semi di basilico genovese (bustina da 2 g)
+    category: sementi
+    price_eur: 2.90
+    perishable: true
+    kb_path: products/semi_basilico_genovese.md
+
+  - sku: GT-SEM-002
+    name: Semi di misticanza invernale da taglio (bustina da 5 g)
+    category: sementi
+    price_eur: 3.40
+    perishable: true
+    kb_path: products/semi_misticanza_invernale.md
+
+  - sku: GT-SEM-003
+    name: Semi di carota di Chioggia (bustina da 4 g)
+    category: sementi
+    price_eur: 2.60
+    perishable: true
+    kb_path: products/semi_carota_chioggia.md
+
+  # --- Attrezzi (3) --------------------------------------------------------------
+  - sku: GT-ATT-001
+    name: Forbici da potatura bypass, lama in acciaio giapponese
+    category: attrezzi
+    price_eur: 24.90
+    perishable: false
+    kb_path: products/forbici_potatura_bypass.md
+
+  - sku: GT-ATT-002
+    name: Trapiantatoio a mano in acciaio inox, manico in frassino
+    category: attrezzi
+    price_eur: 12.50
+    perishable: false
+    kb_path: products/trapiantatoio_acciaio_inox.md
+
+  - sku: GT-ATT-003
+    name: Annaffiatoio in zinco da 5 litri con cipolla removibile
+    category: attrezzi
+    price_eur: 18.90
+    perishable: false
+    kb_path: products/annaffiatoio_zinco_5l.md
+
+  # --- Vasi (3) ------------------------------------------------------------------
+  - sku: GT-VAS-001
+    name: Vaso in terracotta naturale, diametro 24 cm
+    category: vasi
+    price_eur: 14.90
+    perishable: false
+    kb_path: products/vaso_terracotta_24.md
+
+  - sku: GT-VAS-002
+    name: Fioriera da balcone in resina, 60 cm, con sottovaso
+    category: vasi
+    price_eur: 19.90
+    perishable: false
+    kb_path: products/fioriera_balcone_60.md
+
+  - sku: GT-VAS-003
+    name: Vaso autoirrigante con riserva d'acqua, diametro 30 cm
+    category: vasi
+    price_eur: 27.50
+    perishable: false
+    kb_path: products/vaso_autoirrigante_30.md
+
+  # --- Terricci (2) --------------------------------------------------------------
+  - sku: GT-TER-001
+    name: Terriccio universale torba-free, sacco da 50 litri
+    category: terricci
+    price_eur: 11.90
+    perishable: false
+    kb_path: products/terriccio_universale_50l.md
+
+  - sku: GT-TER-002
+    name: Substrato specifico per bulbi, drenante, sacco da 20 litri
+    category: terricci
+    price_eur: 8.90
+    perishable: false
+    kb_path: products/substrato_bulbi_20l.md
+
+  # --- Fertilizzanti (2) ---------------------------------------------------------
+  - sku: GT-FER-001
+    name: Concime granulare a cessione lenta per prato, secchio da 5 kg
+    category: fertilizzanti
+    price_eur: 22.90
+    perishable: false
+    kb_path: products/concime_granulare_prato_5kg.md
+
+  - sku: GT-FER-002
+    name: Concime liquido per piante fiorite, flacone da 1 litro
+    category: fertilizzanti
+    price_eur: 7.50
+    perishable: false
+    kb_path: products/concime_liquido_fiorite_1l.md
