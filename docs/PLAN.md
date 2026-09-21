@@ -78,7 +78,7 @@ DoD:
 
 ---
 
-## [ ] Fase 3 — Tool
+## [x] Fase 3 — Tool ✅ completata
 
 **Obiettivo**: tre tool con contratti espliciti e casi limite coperti, testati senza LLM.
 
