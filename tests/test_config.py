@@ -1,0 +1,119 @@
+"""Tests for the configuration layer."""
+
+from __future__ import annotations
+
+import datetime as dt
+
+import pytest
+from pydantic import ValidationError
+
+from greenthumb.config import REPO_ROOT, MissingEvalModelError, Settings
+
+
+def _settings(**overrides: object) -> Settings:
+    """Build a Settings instance that ignores any local .env file.
+
+    Args:
+        **overrides: Field values to set explicitly.
+
+    Returns:
+        A Settings instance built only from the given overrides and the declared defaults.
+    """
+    return Settings(_env_file=None, **overrides)
+
+
+def test_defaults_match_the_specification() -> None:
+    """Defaults must reflect the approved decisions, not incidental values."""
+    settings = _settings()
+    assert settings.today == dt.date(2026, 10, 12)  # ADR-003
+    assert settings.agent_max_iterations == 8  # ADR-012
+    assert settings.summary_trigger_tokens == 2500  # ADR-004
+    assert settings.summary_keep_messages == 6
+    assert settings.retrieval_top_k == 4
+    assert settings.embedding_model == "intfloat/multilingual-e5-base"  # ADR-005
+
+
+def test_retrieval_thresholds_default_to_zero_because_they_are_calibrated() -> None:
+    """Phase 2 calibrates the thresholds; an unset value must be obvious, not plausible."""
+    settings = _settings()
+    assert settings.retrieval_score_low == 0.0
+    assert settings.retrieval_score_high == 0.0
+
+
+def test_project_variables_are_read_with_the_greenthumb_prefix(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Project variables must carry the prefix that protects them on Colab (ADR-013).
+
+    Args:
+        monkeypatch: Pytest fixture used to set environment variables.
+    """
+    monkeypatch.setenv("GREENTHUMB_LLM_MODEL", "openai/some-model")
+    monkeypatch.setenv("GREENTHUMB_AGENT_MAX_ITERATIONS", "11")
+    settings = Settings(_env_file=None)
+    assert settings.llm_model == "openai/some-model"
+    assert settings.agent_max_iterations == 11
+
+
+def test_provider_key_is_read_without_a_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The provider key keeps the unprefixed name its SDK imposes.
+
+    Args:
+        monkeypatch: Pytest fixture used to set environment variables.
+    """
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-value")
+    settings = Settings(_env_file=None)
+    assert settings.openai_api_key is not None
+    assert settings.openai_api_key.get_secret_value() == "sk-test-value"
+
+
+def test_provider_key_is_not_leaked_by_repr(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A secret must never appear in logs or tracebacks through a plain repr.
+
+    Args:
+        monkeypatch: Pytest fixture used to set environment variables.
+    """
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-secret-do-not-print")
+    assert "sk-secret-do-not-print" not in repr(Settings(_env_file=None))
+
+
+def test_high_threshold_below_low_threshold_is_rejected() -> None:
+    """An inverted threshold pair is a configuration error, not something to tolerate."""
+    with pytest.raises(ValidationError, match="retrieval_score_high"):
+        _settings(retrieval_score_low=0.8, retrieval_score_high=0.5)
+
+
+def test_require_eval_model_raises_when_unset() -> None:
+    """The judge model is validated lazily, but strictly when it is actually needed."""
+    with pytest.raises(MissingEvalModelError, match="GREENTHUMB_EVAL_MODEL"):
+        _settings().require_eval_model()
+
+
+def test_require_eval_model_returns_the_configured_model() -> None:
+    """A configured judge model must be returned unchanged."""
+    assert _settings(eval_model="openai/judge").require_eval_model() == "openai/judge"
+
+
+def test_importing_settings_does_not_require_a_judge_model() -> None:
+    """Building Settings must stay cheap and total, so the notebook runs with one secret."""
+    assert _settings().eval_model == ""
+
+
+def test_clock_is_pinned_to_the_configured_business_date() -> None:
+    """The clock must follow configuration, never the wall clock."""
+    settings = _settings(today=dt.date(2027, 3, 1))
+    assert settings.clock().today() == dt.date(2027, 3, 1)
+
+
+def test_derived_paths_sit_under_the_repository_root() -> None:
+    """Every path is relative to the repo root, so Colab checkouts work unchanged."""
+    settings = _settings()
+    for path in (
+        settings.data_dir,
+        settings.kb_dir,
+        settings.orders_path,
+        settings.vector_store_dir,
+        settings.escalations_path,
+    ):
+        assert path.is_absolute()
+        assert REPO_ROOT in path.parents or path.parent == REPO_ROOT
