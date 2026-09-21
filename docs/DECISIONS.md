@@ -227,4 +227,92 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   usa il percorso deprecato. Le firme esatte delle due metriche restano da verificare nello
   spike n.5 (fase 0, passo 4).
 
+## ADR-021 — Soglie calibrate sulla distanza grezza di Chroma
+
+- **Contesto**: SPEC §6 parla di "score" senza dire quale API usare, e CLAUDE.md avverte di
+  distinguere distanza da similarità. Spike n.4, nessuna chiamata LLM.
+- **Misura**: sulla versione installata le due API sono legate da una relazione esatta,
+  `relevance = 1 − distanza` (verificato: distanza 0.0870 → relevance 0.9130; 0.1261 → 0.8739;
+  0.1304 → 0.8696). Nessuna normalizzazione esotica di mezzo, in questa versione.
+- **Decisione**: interrogare con `similarity_search_with_score` (distanza coseno) e convertire
+  con una formula esplicita e nostra, `similarity = 1 − distanza`. Le soglie di config sono
+  espresse come **similarità**.
+- **Alternative scartate**: `similarity_search_with_relevance_scores` (oggi darebbe identici
+  risultati, ma la normalizzazione è interna alla libreria e può cambiare in un aggiornamento,
+  spostando silenziosamente soglie che avremo calibrato con cura).
+- **Conseguenze**: le soglie restano ancorate a un numero che dipende solo dall'embedding, non
+  dalla versione di `langchain-chroma`. La formula va documentata nella relazione.
+
+## ADR-022 — Prefissi e5 mantenuti, ma l'effetto misurato è modesto
+
+- **Contesto**: CLAUDE.md avverte che senza i prefissi `query: ` / `passage: ` "la qualità del
+  retrieval crolla in modo silenzioso". Lo spike n.4 ha misurato l'affermazione.
+- **Misura** (4 passaggi in italiano, 3 query pertinenti, 2 fuori tema):
+
+  | | hit@1 | peggior distanza pertinente | miglior distanza fuori tema | separazione |
+  |---|---|---|---|---|
+  | con prefissi | 3/3 | 0.1304 | 0.2285 | **+0.0981** |
+  | senza prefissi | 3/3 | 0.1346 | 0.2260 | **+0.0914** |
+
+- **Esito**: i prefissi aiutano, ma di poco — la separazione migliora di 0.0067, e `hit@1` è
+  perfetto in entrambi i casi. **Su questo campione il "crollo" descritto non si riproduce.**
+- **Decisione**: usare comunque i prefissi. Sono l'uso documentato del modello, non costano
+  nulla, e l'effetto atteso cresce con corpus più grandi e negativi più difficili di questi.
+- **Conseguenze**: l'avvertimento di CLAUDE.md va ridimensionato, non ignorato. Il campione è di
+  soli 4 documenti con negativi banali (capitali del Giappone, router wifi): va **rimisurato in
+  fase 2** sulla KB reale da 35 documenti, dove i distrattori sono altri documenti di giardinaggio
+  e quindi molto più insidiosi. Onestà del dato: non è ancora una prova che i prefissi siano
+  superflui, ma nemmeno una conferma che siano critici.
+- **Nota di calibrazione**: le distanze pertinenti stanno in 0.087–0.135 e le fuori tema in
+  0.226–0.272. La fascia è alta e stretta, come CLAUDE.md prevedeva: una soglia plausibile cade
+  attorno a similarità 0.82–0.83, ma va calibrata sui dati veri in fase 2, non fissata ora.
+
+## ADR-023 — RAGAS: metriche `collections` chiamate per turno, non `evaluate()`
+
+- **Contesto**: spike n.5, introspezione del pacchetto installato, nessuna chiamata LLM.
+- **Scoperte**:
+  - La classe si chiama `ContextPrecisionWithReference`, **non** `LLMContextPrecisionWithReference`:
+    quest'ultimo esiste solo nel percorso deprecato `ragas.metrics`. SPEC §10.3 va letta di
+    conseguenza.
+  - Le metriche di `ragas.metrics.collections` richiedono il giudice **nel costruttore**
+    (`Faithfulness(llm: InstructorBaseRagasLLM, ...)`) ed espongono
+    `ascore(user_input, response, retrieved_contexts)` e
+    `ascore(user_input, reference, retrieved_contexts)`: parametri espliciti, non un
+    `SingleTurnSample`.
+  - `ragas.evaluate()` accetta invece `BaseRagasLLM` e metriche vecchio stile: appartiene al
+    percorso legacy. I due mondi non si mescolano.
+- **Decisione**: usare le metriche di `collections` e invocare `ascore()` per turno, senza
+  `evaluate()`. Si sposa con l'architettura già prevista (SPEC §10.2): le metriche leggono le
+  trace salvate, turno per turno.
+- **Conseguenze**: il giudice si costruisce con
+  `ragas.llms.llm_factory(model, provider="openai", client=OpenAI(...))`. `llm_factory` accetta
+  anche `cache=DiskCacheBackend()`, che secondo la sua docstring riduce di molto il costo delle
+  rivalutazioni ripetute: da valutare in fase 7, dove rieseguiamo l'evaluation prima e dopo
+  l'intervento correttivo.
+
+## ADR-024 — DeepEval: test case a `Turn`, telemetria disattivata, giudice come stringa
+
+- **Contesto**: spike n.6, introspezione del pacchetto installato, nessuna chiamata LLM.
+- **Scoperte**:
+  - `DEEPEVAL_TELEMETRY_OPT_OUT=YES` funziona e va impostata **prima** dell'import:
+    `telemetry_opt_out()` restituisce `True`. Risolve il punto (b) di ADR-018.
+  - `ConversationalTestCase(turns=[Turn(role=..., content=..., retrieval_context=...,
+    tools_called=...)])`: la forma è a oggetti `Turn`, non a stringhe.
+  - `KnowledgeRetentionMetric.measure()` accetta un `ConversationalTestCase`, come serve a noi.
+  - `GEval(name, evaluation_params=[...], criteria=..., model=...)` accetta `evaluation_params`
+    di tipo `SingleTurnParams`; `LLMTestCaseParams` esiste ancora come alias equivalente, quindi
+    il materiale online che usa il vecchio nome non si rompe. Esiste anche `ConversationalGEval`
+    per criteri multi-turno.
+  - `model` accetta una **stringa** oltre a un `DeepEvalBaseLLM`: con OpenAI (ADR-015) non serve
+    scrivere alcun wrapper per il giudice.
+  - `GEval` usa `top_logprobs=20`: richiede un modello che esponga i logprob. Con OpenAI è
+    soddisfatto, ma è un vincolo da ricordare se il giudice cambiasse provider.
+- **Decisione**: usare `Turn`/`ConversationalTestCase`, giudice passato come stringa, telemetria
+  disattivata all'ingresso del modulo di evaluation.
+- **Conseguenze**: nessun wrapper LLM da scrivere né per DeepEval né per RAGAS, perché entrambi
+  hanno OpenAI come percorso nativo. È il dividendo concreto di ADR-015.
+- **Nota**: DeepEval installa un plugin pytest che stampa `Running teardown with pytest
+  sessionfinish...` anche nei test unitari, che con lui non c'entrano nulla. Innocuo, ma se
+  dovesse dare fastidio si disattiva con `-p no:deepeval`.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
