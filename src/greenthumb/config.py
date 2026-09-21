@@ -76,6 +76,13 @@ class Settings(BaseSettings):
 
     # --- Agent ---
     agent_max_iterations: int = Field(default=8, ge=1, le=30)
+    max_output_tokens: int = Field(
+        default=1024,
+        ge=64,
+        le=8192,
+        description="Explicit output cap on every model call. Without one LiteLLM requests "
+        "65536 tokens and OpenRouter rejects the call with 402 (ADR-031).",
+    )
 
     @field_validator("retrieval_score_high")
     @classmethod

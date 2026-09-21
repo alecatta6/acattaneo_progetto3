@@ -133,3 +133,14 @@ def test_settings_ignore_a_leaked_dotenv(monkeypatch: pytest.MonkeyPatch) -> Non
     # plugin at import time would already be gone; an explicit set must still be visible,
     # which proves the fixture strips rather than freezes the environment.
     assert Settings(_env_file=None).eval_model == "leaked/from-dotenv"
+
+
+def test_output_cap_has_a_conservative_default() -> None:
+    """Every call needs an explicit cap, or OpenRouter refuses it with a 402 (ADR-031)."""
+    assert _settings().max_output_tokens == 1024
+
+
+def test_output_cap_rejects_an_absurd_value() -> None:
+    """A cap high enough to reproduce the 402 is a configuration error."""
+    with pytest.raises(ValidationError, match="max_output_tokens"):
+        _settings(max_output_tokens=65536)

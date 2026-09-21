@@ -418,7 +418,8 @@ fanno eccezione le chiavi dei provider, il cui nome è imposto dall'SDK. Variabi
 `OPENAI_API_KEY`, `GREENTHUMB_TODAY`, `GREENTHUMB_EMBEDDING_MODEL`,
 `GREENTHUMB_RETRIEVAL_TOP_K`, `GREENTHUMB_RETRIEVAL_SCORE_LOW`,
 `GREENTHUMB_RETRIEVAL_SCORE_HIGH`, `GREENTHUMB_SUMMARY_TRIGGER_TOKENS`,
-`GREENTHUMB_SUMMARY_KEEP_MESSAGES`, `GREENTHUMB_AGENT_MAX_ITERATIONS`.
+`GREENTHUMB_SUMMARY_KEEP_MESSAGES`, `GREENTHUMB_AGENT_MAX_ITERATIONS`,
+`GREENTHUMB_MAX_OUTPUT_TOKENS` (ADR-031).
 `GREENTHUMB_EVAL_MODEL` è validato in modo **pigro**, solo quando l'evaluation viene
 effettivamente eseguita, così il notebook gira con il solo segreto dell'agente (ADR-010). Su Colab i valori arrivano dai Secrets e
 vengono esportati come variabili d'ambiente prima dell'import del pacchetto.

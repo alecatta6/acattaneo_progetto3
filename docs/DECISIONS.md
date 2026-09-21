@@ -425,4 +425,36 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   possono essere servite da infrastrutture diverse — da citare fra i limiti nella relazione.
 - **Stato**: **decisione sospesa**, in attesa dell'utente. ADR-015 va emendato di conseguenza.
 
+## ADR-030 — Pinning del fornitore OpenRouter: non implementabile via LiteLLM
+
+- **Contesto**: si era deciso di vincolare OpenRouter a un solo fornitore a monte, per rendere
+  riproducibile il confronto prima/dopo della fase 7 (OpenRouter smista fra Azure, OpenAI e altri).
+- **Verifica**: OpenRouter accetta il pinning solo nel **corpo** della richiesta, col campo
+  `provider: {"order": [...], "allow_fallbacks": false}`. In litellm 1.102.0 la classe
+  `OpenrouterConfig.map_openai_params` costruisce un `extra_body` **nuovo** a partire dai soli
+  `transforms`, `models` e `route`, e poi lo **assegna**, scartando qualunque `extra_body`
+  passato dal chiamante. Misurato direttamente: passando
+  `extra_body={"provider": {"order": ["OpenAI"], "allow_fallbacks": False}}` il risultato mappato
+  è `{}`. Inoltre `get_supported_openai_params` per openrouter espone solo `extra_headers`, e il
+  routing di OpenRouter non è controllabile via header.
+- **Decisione**: non si implementa in codice. Il pinning va impostato, se lo si vuole, dalle
+  **preferenze di account su OpenRouter** (lista di fornitori consentiti/esclusi), che agiscono
+  su tutte le richieste della chiave senza toccare il nostro codice.
+- **Alternative scartate**: patchare `OpenrouterConfig` (monkey-patch di una classe interna di
+  litellm: fragile e indifendibile in un progetto d'esame); abbandonare LiteLLM (è un requisito
+  d'esame, R1).
+- **Conseguenze**: se l'impostazione di account non viene applicata, la variabilità fra fornitori
+  resta e va citata fra i limiti nella relazione. Da rivalutare se litellm aggiungerà il supporto.
+
+## ADR-031 — `max_tokens` esplicito su ogni chiamata
+
+- **Contesto**: senza un tetto esplicito LiteLLM richiede fino a 65536 token di output, e
+  OpenRouter rifiuta con `402` quando il credito residuo non li copre (ADR-029). Non è solo un
+  problema di budget: un tetto alto lascia anche che una risposta degeneri.
+- **Decisione**: nuova variabile `GREENTHUMB_MAX_OUTPUT_TOKENS` (default 1024), applicata a ogni
+  costruzione del modello. Le risposte di customer care sono brevi per natura; 1024 token sono
+  già generosi.
+- **Conseguenze**: rende il costo per chiamata prevedibile e limita l'esposizione al `402`.
+  Va aggiunta a SPEC §12 e a `.env.example`.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
