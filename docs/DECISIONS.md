@@ -341,4 +341,88 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   in un ecosistema dove le librerie di valutazione fanno I/O all'import, l'isolamento dei test
   va imposto attivamente, non dato per scontato.
 
+## ADR-026 — Structured output: strategia nativa, e nessun campo opzionale
+
+- **Contesto**: SPEC §5 chiedeva di verificare in fase 0 se il modello supporta `response_format`
+  nativo (*ProviderStrategy*) o se serve ripiegare su *ToolStrategy*. Spike n.1.
+- **Esito**: **ProviderStrategy**. `create_agent(..., response_format=AgentOutput)` invia lo schema
+  JSON nativamente (l'errore diagnostico cita `text.format.schema`, parametro dell'API del
+  provider, non una tool call). Conseguenza diretta: **lo structured output non consuma
+  un'iterazione del ciclo ReAct e non compare fra i tool invocati**. Su un turno a un tool
+  l'unica tool call registrata è quella reale, e lo stato finale conta 4 messaggi.
+- **Conseguenza su ADR-012**: il limite di 8 iterazioni è abbondante, non stretto. Resta a 8.
+- **Conseguenza su `tool_selection_accuracy`**: la metrica non va depurata da chiamate sintetiche,
+  perché non ce ne sono.
+- **Vincolo scoperto**: in modalità strict **ogni campo dello schema deve essere obbligatorio**.
+  Un campo con `default_factory=list` fa fallire l'intera richiesta con
+  `Invalid schema for response_format 'AgentOutput': 'required' ... Missing 'cited_sources'`.
+  Quindi `AgentOutput` non può avere default: `cited_sources` è obbligatorio, con lista vuota
+  quando non ci sono fonti. Da ricordare per ogni modello Pydantic passato come `response_format`.
+
+## ADR-027 — Gli artifact dei tool sono leggibili: ADR-002 è realizzabile
+
+- **Contesto**: era il rischio architetturale più grave del progetto. Se il passo di structured
+  output avesse nascosto i `ToolMessage`, il livello deterministico di SPEC §5 sarebbe stato
+  irrealizzabile e ADR-002 da riprogettare.
+- **Esito**: **verificato funzionante**. Lo stato restituito da `create_agent` contiene sia
+  `structured_response` (istanza `AgentOutput`) sia `messages`, e il `ToolMessage` del turno
+  espone `artifact` intatto:
+  `[{'doc_id': 'guides/bulbi_autunnali.md', 'score': 0.91, 'chunk_id': 'c1'}, ...]`.
+- **Conseguenze**: `response.py` può intersecare `cited_sources` con i documenti realmente
+  restituiti dal retrieval, esattamente come previsto. Nello spike il modello ha citato solo
+  `guides/bulbi_autunnali.md` pur avendone ricevuti due, quindi l'intersezione avrà davvero
+  lavoro da fare.
+- **Osservazione di contorno**: senza la data di business nel system prompt il modello ha
+  risposto in modo evasivo ("se siamo già in questo periodo..."). Conferma sul campo la necessità
+  di iniettare la data dinamicamente, come prescrive SPEC §8 punto 2.
+
+## ADR-028 — Memoria: `SummarizationMiddleware`, con prompt e rilevamento propri
+
+- **Contesto**: SPEC §9 prescriveva la summarization "verificando nome e parametri sulla versione
+  installata". Spike n.3.
+- **API reale**: `SummarizationMiddleware(model, *, trigger, keep, token_counter, summary_prompt,
+  trim_tokens_to_summarize)`. `trigger` e `keep` sono **tuple**, non interi:
+  `trigger=("tokens", 2500)` (oppure `("messages", n)` / `("fraction", f)`) e
+  `keep=("messages", 6)`. Il default di `keep` è 20 messaggi.
+- **Il prompt predefinito è inadatto**: è scritto per un agente di programmazione, con sezioni
+  `SESSION INTENT` / `ARTIFACTS` / `NEXT STEPS`, e butterebbe via proprio ciò che serve al
+  customer care. Il prompt personalizzato di SPEC §9 non è un abbellimento, è necessario.
+- **Verifica comportamentale**: con `trigger=("messages", 4)` e `keep=("messages", 2)` la
+  summarization scatta e il conteggio dei messaggi resta fermo a 4 invece di crescere. Il
+  riassunto prodotto dal nostro prompt ha conservato **il numero d'ordine 1042 del turno 1**, il
+  vincolo del cliente ("coltiva solo sul balcone, in vaso, poco sole") e la domanda rimasta
+  senza risposta. Al turno 4 l'agente ha ancora risposto correttamente "1042".
+- **Falso negativo da evitare**: la prima esecuzione usava `trigger=("tokens", 250)` e la
+  summarization **non è mai scattata** su una conversazione di quattro turni brevi. Il numero
+  d'ordine sopravviveva banalmente, perché non era stato riassunto nulla. Un test di memoria che
+  non verifica *anche* che il trigger sia scattato non dimostra niente: in fase 5 il test deve
+  asserire entrambe le cose.
+- **Dove finisce il riassunto**: viene iniettato come `HumanMessage` in posizione 0, preceduto
+  dalla stringa **in inglese** `"Here is a summary of the conversation to date:"`, hardcoded in
+  `_build_new_messages` e non configurabile. Lo stato espone solo `messages`, nessun campo
+  separato. Per il log di fase 5 e la demo del notebook, il rilevamento è quindi: messaggio 0 di
+  tipo `HumanMessage` che inizia con quel marcatore. Da citare come piccolo difetto: testo
+  inglese dentro una conversazione interamente italiana.
+
+## ADR-029 — Il provider reale è OpenRouter: ADR-015 va rivisto
+
+- **Contesto**: la chiave fornita in `.env` ha prefisso `sk-or-v1`, cioè è una chiave
+  **OpenRouter**, mentre `GREENTHUMB_LLM_MODEL` era `openai/gpt-4.1-mini`. LiteLLM instradava
+  quindi direttamente a OpenAI, che rispondeva `401 invalid_api_key`.
+- **Verificato funzionante su OpenRouter** (prefisso `openrouter/openai/gpt-4.1-mini`):
+  chiamata semplice, tool calling, structured output nativo, agente completo, memoria con
+  summarization, e **RAGAS `Faithfulness`** (punteggio 1.0) con un client
+  `AsyncOpenAI(base_url="https://openrouter.ai/api/v1")` passato a `llm_factory`.
+- **Due vincoli pratici emersi**:
+  1. **Tetto di credito.** Senza un `max_tokens` esplicito LiteLLM chiede fino a 65536 token di
+     output e OpenRouter risponde `402`: la chiave "can only afford ~24668". Tutte le chiamate
+     vanno quindi fatte con `max_tokens` esplicito e contenuto.
+  2. **DeepEval non passa.** Non per incompatibilità di API, ma perché non impone un
+     `max_tokens` e incappa nello stesso `402`. Il test dei logprob richiesti da `GEval`
+     (ADR-024) **non è stato quindi ancora eseguito**: resta un rischio aperto.
+- **Osservazione sulla riproducibilità**: OpenRouter bilancia le richieste fra più fornitori
+  a monte (nell'errore diagnostico compaiono sia Azure sia OpenAI). Due esecuzioni identiche
+  possono essere servite da infrastrutture diverse — da citare fra i limiti nella relazione.
+- **Stato**: **decisione sospesa**, in attesa dell'utente. ADR-015 va emendato di conseguenza.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
