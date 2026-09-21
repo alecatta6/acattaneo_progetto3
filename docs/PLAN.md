@@ -8,7 +8,7 @@ Stato: aggiornare la casella di ogni fase quando l'utente la approva.
 
 ---
 
-## [ ] Fase 0 — Bootstrap e spike tecnico
+## [x] Fase 0 — Bootstrap e spike tecnico ✅ completata
 
 **Obiettivo**: ambiente funzionante e API delle librerie verificate *prima* di scrivere il codice
 vero. Questa fase esiste per evitare di costruire su API che non esistono più.
