@@ -721,4 +721,66 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   esecuzione delle fixture. Va chiuso in modo esplicito e verificato, non dato per risolto dopo
   il primo intervento.
 
+## ADR-045 — Chunking ripulito dalla ripetizione del titolo, e seconda calibrazione
+
+- **Contesto**: scrivendo il tool RAG si è visto cosa il modello legge davvero. Ogni chunk
+  conteneva il titolo del documento **fino a tre volte**: come prefisso di contesto, come
+  percorso di heading, e come riga Markdown letterale (`# Titolo`), perché il chunking usava
+  `strip_headers=False`.
+- **Correzione**: `strip_headers=True`, così la riga letterale sparisce (il testo dell'heading
+  raggiunge comunque il chunk tramite il prefisso), e un percorso di heading che **ripete il
+  titolo** viene omesso. Verificato prima di decidere: l'`h1` coincide col titolo, o ne è un
+  prefisso, in 13 documenti su 37; negli altri 24 porta significato proprio
+  («Il balcone ha tre vincoli», «Ingiallimento: leggere il sintomo») e va conservato. Scartata
+  quindi l'ipotesi più semplice di eliminare sempre il livello `h1`.
+- **Esito misurato**: 206 chunk invece di 207, 519 caratteri medi invece di 546.
+
+  | Chunking | hit@1 | hit@4 | Separazione |
+  |---|---|---|---|
+  | Ridondante | 12/12 | 12/12 | +0.0132 |
+  | Pulito | 11/12 | 12/12 | +0.0103 |
+
+- **Onestà del risultato: il chunking pulito NON migliora il retrieval.** `hit@1` perde una
+  query e la separazione si restringe di 0.0029. La query persa è però un pareggio a
+  **0.0004** fra tre chunk che rispondono tutti alla domanda, con il documento atteso secondo.
+  Non si è allargato a posteriori l'insieme dei documenti accettabili per far tornare la
+  metrica: sarebbe il modo più rapido di rendere inutile un benchmark.
+- **Decisione**: tenere il chunking pulito. Il guadagno non è nelle metriche ma in ciò che il
+  modello legge a ogni turno: 5% di caratteri in meno e nessuna ripetizione priva di
+  informazione. La differenza sulle metriche rientra nel rumore di un campione di 20 query.
+- **Conseguenze**: indice ricostruito, soglie ricalibrate (`LOW` resta 0.813, `HIGH` scende da
+  0.864 a 0.863), `docs/retrieval_calibration.md` riscritto per intero. ADR-040 e ADR-041 vanno
+  letti alla luce di questa seconda misura.
+
+## ADR-046 — L'ablazione sui prefissi diventa uno script versionato, e il verdetto si complica
+
+- **Contesto**: la misura sui prefissi e5 era stata fatta due volte con file usa-e-getta, ed è
+  citata in DECISIONS.md. Una misura citata in una relazione deve essere riproducibile.
+- **Decisione**: `scripts/ablation_e5_prefixes.py`, versionato, che costruisce un secondo indice
+  temporaneo senza prefissi e lo confronta con quello di produzione sulle stesse query.
+- **Risultati sulle quattro combinazioni**:
+
+  | Chunking | Prefissi | hit@1 | hit@4 | Separazione min/max | Distanza fra le medie |
+  |---|---|---|---|---|---|
+  | Ridondante | con | 12/12 | 12/12 | +0.0132 | 0.0782 |
+  | Ridondante | senza | 11/12 | 12/12 | +0.0130 | 0.0704 |
+  | **Pulito** | **con** | 11/12 | 12/12 | +0.0103 | **0.0779** |
+  | Pulito | senza | 11/12 | 12/12 | **+0.0181** | 0.0701 |
+
+- **Le due statistiche si contraddicono**: sulla separazione fra gli estremi i prefissi
+  peggiorano le cose (+0.0103 contro +0.0181); sulla distanza fra le medie le migliorano
+  (0.0779 contro 0.0701), e con un margine più ampio.
+- **Lettura**: min e max, su 12 e 8 query, sono determinati da **singole osservazioni** e sono la
+  statistica meno stabile disponibile. La distanza fra le medie usa tutti i dati ed è coerente
+  in entrambe le configurazioni di chunking. È un promemoria utile per la fase 7: la metrica con
+  cui si misura un intervento va scelta **prima** di vedere i risultati, altrimenti si finisce a
+  scegliere quella che dice ciò che si sperava.
+- **Decisione**: mantenere i prefissi. Sono l'uso documentato del modello, la statistica più
+  stabile li favorisce, `hit@1` e `hit@4` sono identici nelle due varianti, e la soglia operativa
+  resta comunque presidiata da altri due meccanismi (ADR-040).
+- **Conseguenza per la relazione**: l'avvertimento di CLAUDE.md — «senza i prefissi la qualità
+  del retrieval crolla in modo silenzioso» — **non è confermato da nessuna delle quattro
+  misure**. Va riportato come esempio concreto di insidia ereditata dalla documentazione e
+  smentita dalla misura sul proprio corpus.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->

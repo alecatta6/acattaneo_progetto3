@@ -99,16 +99,32 @@ class SearchHit:
     similarity: float
 
 
-def _heading_path(metadata: dict[str, str]) -> str:
-    """Join the Markdown heading levels present on a chunk.
+def _heading_path(metadata: dict[str, str], title: str) -> str:
+    """Join the Markdown heading levels present on a chunk, dropping redundant ones.
+
+    A heading that merely restates the document title adds nothing to the chunk and costs
+    tokens in every single one. This happens in 13 of the 37 documents, where the ``#``
+    heading repeats the frontmatter title verbatim or as a prefix of it. In the other 24 the
+    top heading carries its own meaning ("Il balcone ha tre vincoli") and is kept (ADR-045).
 
     Args:
         metadata: Chunk metadata produced by the header splitter.
+        title: The document title, already used as the chunk prefix.
 
     Returns:
-        The heading path, for example ``"Resi e rimborsi > Spese e rimborso"``.
+        The heading path, for example ``"Spese e rimborso"``, empty when every level was
+        redundant.
     """
-    parts = [metadata[key] for key in HEADER_KEYS if metadata.get(key)]
+    normalized_title = " ".join(title.split()).casefold()
+    parts = []
+    for key in HEADER_KEYS:
+        heading = metadata.get(key)
+        if not heading:
+            continue
+        normalized = " ".join(heading.split()).casefold()
+        if normalized_title.startswith(normalized):
+            continue
+        parts.append(heading.strip())
     return " > ".join(parts)
 
 
@@ -122,7 +138,9 @@ def chunk_document(document: KbDocument) -> list[Document]:
         The chunks, each prefixed with the document title and heading path, and carrying
         the document's metadata plus ``chunk_id`` and ``heading_path``.
     """
-    header_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=HEADERS, strip_headers=False)
+    # strip_headers=True: the heading text already reaches the chunk through the prefix
+    # below, so keeping the literal "## Heading" line would repeat it a second time.
+    header_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=HEADERS, strip_headers=True)
     sections = header_splitter.split_text(document.body)
 
     character_splitter = RecursiveCharacterTextSplitter(
@@ -133,7 +151,7 @@ def chunk_document(document: KbDocument) -> list[Document]:
 
     chunks: list[Document] = []
     for section in sections:
-        heading = _heading_path(section.metadata)
+        heading = _heading_path(section.metadata, document.title)
         pieces = (
             character_splitter.split_text(section.page_content)
             if len(section.page_content) > MAX_SECTION_CHARS

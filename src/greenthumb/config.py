@@ -76,7 +76,7 @@ class Settings(BaseSettings):
         ),
     )
     retrieval_score_high: float = Field(
-        default=0.864,
+        default=0.863,
         ge=0.0,
         le=1.0,
         description="At or above this, retrieval quality allows high confidence.",
