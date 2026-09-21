@@ -11,7 +11,7 @@ va mantenuta aggiornata: a fine progetto è la checklist di consegna.
 | R2 | ≥3 tool: RAG sul catalogo, stato ordine, escalation | `src/greenthumb/tools/` (§7) |
 | R3 | Memoria breve termine esplicita + lungo termine semantica | `memory.py` (§9), `retrieval.py` (§6) |
 | R4 | Output JSON: `answer`, `confidence`, `sources`, `needs_human` | `schemas.py`, `response.py` (§5) |
-| R5 | KB ≥35 documenti + `orders.json` ≥24 ordini | `data/` (§4) |
+| R5 | KB 37 documenti + `orders.json` ≥24 ordini | `data/` (§4) |
 | R6 | Eval ≥15 conversazioni, ≥1 metrica RAGAS + ≥1 DeepEval, con commento | `eval/` (§10) |
 | R7 | Deploy locale FastAPI con istruzioni di avvio | `api.py`, `README.md` (§11) |
 | R8 | Relazione tecnica: architettura, memoria, analisi eval | notebook + `docs/DECISIONS.md` (§13) |
@@ -121,13 +121,14 @@ finestra di messa a dimora o semina, per gli altri il periodo d'uso — con valo
 identici a quelli restituiti da `clock.season_of()`; tutte e quattro significa
 «tutto l'anno».
 
-### 4.3 Knowledge base (≥35 documenti, Markdown con frontmatter)
+### 4.3 Knowledge base (37 documenti, Markdown con frontmatter)
 
 | Cartella | N. | Contenuto |
 |---|---|---|
 | `products/` | 16 | una scheda per prodotto del catalogo |
-| `guides/` | 12 | guide di coltivazione e cura, stagionali |
+| `guides/` | 14 | guide di coltivazione e cura: stagionali, per contesto di coltivazione (balcone, vaso, poca luce) e per problema (annaffiatura, ingiallimento, ristagni) |
 | `policies/` | 7 | resi e rimborsi, spedizioni, prodotti deperibili, garanzia attrezzi, danni da trasporto, pagamenti, contatti e orari |
+| **Totale** | **37** | (ADR-035) |
 
 Deve esistere `guides/bulbi_autunnali.md` (citato nell'esempio della traccia).
 

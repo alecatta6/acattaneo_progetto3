@@ -534,4 +534,67 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Conseguenze**: `validate_data.py` verificherà che ogni `season` sia non vuota e contenga solo
   valori ammessi, importandoli da `clock` invece di duplicarli. SPEC §4.2 aggiornata.
 
+## ADR-035 — 14 guide invece di 12, knowledge base a 37 documenti
+
+- **Contesto**: SPEC §4.3 pianificava 12 guide, per un totale di 35 documenti. La stesura ne ha
+  prodotte 14: lo scostamento è nato distribuendo i temi, non da una scelta deliberata, ed è
+  stato segnalato prima di consolidarlo.
+- **Decisione**: tenere tutte e 14 e allineare la specifica. Le due eccedenti —
+  `raccolta_conservazione_semi.md` e `riconoscere_terriccio_adatto.md` — non duplicano altri
+  documenti: la prima copre germinabilità e conservazione delle sementi, tema che nessuna scheda
+  prodotto affronta in modo trasversale; la seconda copre pH, struttura e scelta del substrato,
+  che le due schede dei terricci trattano solo dal proprio punto di vista.
+- **Alternative scartate**: eliminarne due per aderenza al conteggio pianificato. Il conteggio è
+  un mezzo, non un requisito: R5 chiede almeno 30 documenti, e la copertura più ampia migliora
+  il retrieval senza introdurre ridondanza.
+- **Conseguenze**: KB a 37 documenti (16 schede, 14 guide, 7 policy). SPEC §1 e §4.3 aggiornate.
+  22 documenti risultano rilevanti alla business date del 12 ottobre, quindi le domande
+  stagionali dell'evaluation hanno materiale sufficiente per discriminare.
+- **Nota di metodo**: la deviazione è stata dichiarata invece che assorbita in silenzio. Per un
+  progetto valutato anche sulla tracciabilità delle scelte, uno scostamento documentato vale più
+  di un conteggio rispettato.
+
+## ADR-036 — Ordini generati da codice, non scritti a mano
+
+- **Contesto**: servono almeno 24 ordini coerenti col catalogo, con sette stati coperti e
+  alcuni casi limite precisi. `data/orders.json` è un deliverable ed è versionato.
+- **Decisione**: generazione da `scripts/generate_orders.py` con **seed fisso** (20261012) e date
+  espresse come offset dalla business date, mai da `datetime.now()`. Gli ordini "speciali" non
+  sono casuali: `ORDER_PLAN` fissa stato, offset e SKU obbligatori di ciascuno, e l'ordine 1042
+  è scritto a mano perché SPEC §4.4 ne fissa cliente, date, tracking e totale.
+- **Alternative scartate**: scrivere i 26 ordini a mano (26 totali da ricalcolare a ogni
+  variazione di prezzo); generazione interamente casuale (nessuna garanzia sui casi limite).
+- **Conseguenze**: due esecuzioni producono un file identico byte per byte, verificato da test.
+  Cambiare un prezzo nel catalogo e rieseguire `make data` riallinea tutti gli ordini.
+
+## ADR-037 — Il validatore viene testato sui dati rotti, non su quelli giusti
+
+- **Contesto**: `scripts/validate_data.py` automatizza i controlli fatti a mano mentre i dati
+  venivano scritti. Un validatore che passa sempre è indistinguibile dall'assenza di validatore.
+- **Decisione**: i test corrompono i dati di proposito — SKU malformato, `perishable` incoerente
+  con la categoria, stagione inesistente, `kb_path` senza estensione, scheda prodotto mancante,
+  totale sbagliato, prezzo divergente dal catalogo, ordine 1042 assente o con data errata,
+  copertura di uno stato scesa sotto due — e verificano che ciascuna venga **segnalata**.
+- **Conseguenze**: 52 test verdi. Il valore si è visto subito: il test sui casi limite ha
+  scoperto che l'ordine 1054, pensato come reso deperibile **fuori termine**, veniva generato
+  con la richiesta entro 10 giorni dalla consegna, cioè dentro i 14 giorni di policy. Il caso
+  limite non esisteva. Corretto il generatore, non il test.
+- **Nota tecnica**: i controlli sul testo dei documenti normalizzano gli spazi prima di cercare
+  un valore, perché le righe sono mandate a capo a 100 colonne e una cifra può trovarsi spezzata
+  fra due righe — errore in cui era incorsa una verifica manuale precedente.
+
+## ADR-038 — Una sola versione di ruff, non due
+
+- **Contesto**: un commit è stato rifiutato dal hook pre-commit per una regola (`UP038`) che
+  `make lint`, eseguito un istante prima, dichiarava soddisfatta.
+- **Causa**: pre-commit non usa il ruff del progetto. Crea un proprio ambiente isolato alla
+  versione indicata in `.pre-commit-config.yaml`, che era `v0.9.6`, mentre `uv sync` aveva
+  installato `ruff 0.16.8`. Due linter diversi sullo stesso codice, con due verdetti diversi.
+- **Decisione**: allineare `rev` alla versione presente nel gruppo `dev` di `pyproject.toml`, con
+  un commento che spiega perché i due numeri devono restare uguali.
+- **Conseguenze**: `make lint` e il hook ora concordano. È un allineamento da rifare a ogni
+  aggiornamento di ruff — il commento serve proprio a ricordarlo. Da citare nella relazione fra
+  gli attriti pratici del tooling: un controllo di qualità che si contraddice da solo erode la
+  fiducia nel controllo stesso.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->

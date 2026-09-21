@@ -1,0 +1,666 @@
+[
+  {
+    "order_id": "1042",
+    "customer_name": "Giulia Ferri",
+    "customer_email": "giulia.ferri@example.com",
+    "created_at": "2026-10-08",
+    "status": "shipped",
+    "items": [
+      {
+        "sku": "GT-BUL-001",
+        "name": "Bulbi di tulipano Triumph, mix di colori (confezione da 10)",
+        "quantity": 2,
+        "unit_price_eur": 7.9
+      }
+    ],
+    "total_eur": 15.8,
+    "carrier": "BRT",
+    "tracking_code": "BRT00012345",
+    "estimated_delivery": "2026-10-13",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1043",
+    "customer_name": "Stefano Ferri",
+    "customer_email": "stefano.ferri@example.com",
+    "created_at": "2026-10-11",
+    "status": "processing",
+    "items": [
+      {
+        "sku": "GT-BUL-002",
+        "name": "Bulbi di narciso Tete-a-Tete (confezione da 15)",
+        "quantity": 1,
+        "unit_price_eur": 6.5
+      }
+    ],
+    "total_eur": 6.5,
+    "carrier": null,
+    "tracking_code": null,
+    "estimated_delivery": "2026-10-16",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1044",
+    "customer_name": "Marco De Luca",
+    "customer_email": "marco.deluca@example.com",
+    "created_at": "2026-10-12",
+    "status": "processing",
+    "items": [
+      {
+        "sku": "GT-BUL-003",
+        "name": "Bulbi di giacinto orientale, blu (confezione da 5)",
+        "quantity": 2,
+        "unit_price_eur": 8.4
+      },
+      {
+        "sku": "GT-SEM-001",
+        "name": "Semi di basilico genovese (bustina da 2 g)",
+        "quantity": 1,
+        "unit_price_eur": 2.9
+      }
+    ],
+    "total_eur": 19.7,
+    "carrier": null,
+    "tracking_code": null,
+    "estimated_delivery": "2026-10-17",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1045",
+    "customer_name": "Luca Sartori",
+    "customer_email": "luca.sartori@example.com",
+    "created_at": "2026-10-10",
+    "status": "processing",
+    "items": [
+      {
+        "sku": "GT-SEM-002",
+        "name": "Semi di misticanza invernale da taglio (bustina da 5 g)",
+        "quantity": 3,
+        "unit_price_eur": 3.4
+      }
+    ],
+    "total_eur": 10.2,
+    "carrier": null,
+    "tracking_code": null,
+    "estimated_delivery": "2026-10-15",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1046",
+    "customer_name": "Simone Sartori",
+    "customer_email": "simone.sartori@example.com",
+    "created_at": "2026-10-09",
+    "status": "shipped",
+    "items": [
+      {
+        "sku": "GT-BUL-003",
+        "name": "Bulbi di giacinto orientale, blu (confezione da 5)",
+        "quantity": 3,
+        "unit_price_eur": 8.4
+      }
+    ],
+    "total_eur": 25.2,
+    "carrier": "GLS",
+    "tracking_code": "GLS68712320",
+    "estimated_delivery": "2026-10-14",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1047",
+    "customer_name": "Davide Coppola",
+    "customer_email": "davide.coppola@example.com",
+    "created_at": "2026-10-07",
+    "status": "shipped",
+    "items": [
+      {
+        "sku": "GT-SEM-002",
+        "name": "Semi di misticanza invernale da taglio (bustina da 5 g)",
+        "quantity": 2,
+        "unit_price_eur": 3.4
+      },
+      {
+        "sku": "GT-BUL-002",
+        "name": "Bulbi di narciso Tete-a-Tete (confezione da 15)",
+        "quantity": 3,
+        "unit_price_eur": 6.5
+      },
+      {
+        "sku": "GT-SEM-003",
+        "name": "Semi di carota di Chioggia (bustina da 4 g)",
+        "quantity": 3,
+        "unit_price_eur": 2.6
+      }
+    ],
+    "total_eur": 34.1,
+    "carrier": "GLS",
+    "tracking_code": "GLS93178748",
+    "estimated_delivery": "2026-10-12",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1048",
+    "customer_name": "Elena Lombardi",
+    "customer_email": "elena.lombardi@example.com",
+    "created_at": "2026-09-30",
+    "status": "delivered",
+    "items": [
+      {
+        "sku": "GT-SEM-001",
+        "name": "Semi di basilico genovese (bustina da 2 g)",
+        "quantity": 1,
+        "unit_price_eur": 2.9
+      }
+    ],
+    "total_eur": 2.9,
+    "carrier": "GLS",
+    "tracking_code": "GLS71439057",
+    "estimated_delivery": "2026-10-04",
+    "delivered_at": "2026-10-04",
+    "return": null
+  },
+  {
+    "order_id": "1049",
+    "customer_name": "Simone Moretti",
+    "customer_email": "simone.moretti@example.com",
+    "created_at": "2026-09-22",
+    "status": "delivered",
+    "items": [
+      {
+        "sku": "GT-BUL-003",
+        "name": "Bulbi di giacinto orientale, blu (confezione da 5)",
+        "quantity": 3,
+        "unit_price_eur": 8.4
+      },
+      {
+        "sku": "GT-SEM-002",
+        "name": "Semi di misticanza invernale da taglio (bustina da 5 g)",
+        "quantity": 1,
+        "unit_price_eur": 3.4
+      }
+    ],
+    "total_eur": 28.6,
+    "carrier": "BRT",
+    "tracking_code": "BRT49242895",
+    "estimated_delivery": "2026-09-26",
+    "delivered_at": "2026-09-26",
+    "return": null
+  },
+  {
+    "order_id": "1050",
+    "customer_name": "Giorgio Marchetti",
+    "customer_email": "giorgio.marchetti@example.com",
+    "created_at": "2026-10-06",
+    "status": "delivered",
+    "items": [
+      {
+        "sku": "GT-BUL-002",
+        "name": "Bulbi di narciso Tete-a-Tete (confezione da 15)",
+        "quantity": 2,
+        "unit_price_eur": 6.5
+      }
+    ],
+    "total_eur": 13.0,
+    "carrier": "GLS",
+    "tracking_code": "GLS86406998",
+    "estimated_delivery": "2026-10-11",
+    "delivered_at": "2026-10-11",
+    "return": null
+  },
+  {
+    "order_id": "1051",
+    "customer_name": "Valentina Marchetti",
+    "customer_email": "valentina.marchetti@example.com",
+    "created_at": "2026-09-07",
+    "status": "delivered",
+    "items": [
+      {
+        "sku": "GT-TER-002",
+        "name": "Substrato specifico per bulbi, drenante, sacco da 20 litri",
+        "quantity": 2,
+        "unit_price_eur": 8.9
+      }
+    ],
+    "total_eur": 17.8,
+    "carrier": "BRT",
+    "tracking_code": "BRT49443680",
+    "estimated_delivery": "2026-09-11",
+    "delivered_at": "2026-09-11",
+    "return": null
+  },
+  {
+    "order_id": "1052",
+    "customer_name": "Valentina Bianchi",
+    "customer_email": "valentina.bianchi@example.com",
+    "created_at": "2026-10-03",
+    "status": "delivered",
+    "items": [
+      {
+        "sku": "GT-TER-001",
+        "name": "Terriccio universale torba-free, sacco da 50 litri",
+        "quantity": 1,
+        "unit_price_eur": 11.9
+      },
+      {
+        "sku": "GT-ATT-003",
+        "name": "Annaffiatoio in zinco da 5 litri con cipolla removibile",
+        "quantity": 1,
+        "unit_price_eur": 18.9
+      },
+      {
+        "sku": "GT-SEM-002",
+        "name": "Semi di misticanza invernale da taglio (bustina da 5 g)",
+        "quantity": 2,
+        "unit_price_eur": 3.4
+      },
+      {
+        "sku": "GT-VAS-003",
+        "name": "Vaso autoirrigante con riserva d'acqua, diametro 30 cm",
+        "quantity": 1,
+        "unit_price_eur": 27.5
+      }
+    ],
+    "total_eur": 65.1,
+    "carrier": "BRT",
+    "tracking_code": "BRT24282963",
+    "estimated_delivery": "2026-10-07",
+    "delivered_at": "2026-10-07",
+    "return": null
+  },
+  {
+    "order_id": "1053",
+    "customer_name": "Paolo Caruso",
+    "customer_email": "paolo.caruso@example.com",
+    "created_at": "2026-09-24",
+    "status": "return_requested",
+    "items": [
+      {
+        "sku": "GT-BUL-002",
+        "name": "Bulbi di narciso Tete-a-Tete (confezione da 15)",
+        "quantity": 3,
+        "unit_price_eur": 6.5
+      }
+    ],
+    "total_eur": 19.5,
+    "carrier": "GLS",
+    "tracking_code": "GLS34834961",
+    "estimated_delivery": "2026-09-28",
+    "delivered_at": "2026-09-28",
+    "return": {
+      "requested_at": "2026-10-04",
+      "reason": "Bulbi ammuffiti all'apertura della confezione",
+      "refund_amount_eur": null,
+      "refunded_at": null
+    }
+  },
+  {
+    "order_id": "1054",
+    "customer_name": "Luca Coppola",
+    "customer_email": "luca.coppola@example.com",
+    "created_at": "2026-08-28",
+    "status": "return_requested",
+    "items": [
+      {
+        "sku": "GT-BUL-003",
+        "name": "Bulbi di giacinto orientale, blu (confezione da 5)",
+        "quantity": 2,
+        "unit_price_eur": 8.4
+      }
+    ],
+    "total_eur": 16.8,
+    "carrier": "GLS",
+    "tracking_code": "GLS35624426",
+    "estimated_delivery": "2026-09-01",
+    "delivered_at": "2026-09-01",
+    "return": {
+      "requested_at": "2026-10-01",
+      "reason": "Richiesta di rimborso oltre i 14 giorni su prodotto deperibile",
+      "refund_amount_eur": null,
+      "refunded_at": null
+    }
+  },
+  {
+    "order_id": "1055",
+    "customer_name": "Martina Conti",
+    "customer_email": "martina.conti@example.com",
+    "created_at": "2026-10-01",
+    "status": "return_requested",
+    "items": [
+      {
+        "sku": "GT-BUL-003",
+        "name": "Bulbi di giacinto orientale, blu (confezione da 5)",
+        "quantity": 2,
+        "unit_price_eur": 8.4
+      },
+      {
+        "sku": "GT-BUL-001",
+        "name": "Bulbi di tulipano Triumph, mix di colori (confezione da 10)",
+        "quantity": 1,
+        "unit_price_eur": 7.9
+      }
+    ],
+    "total_eur": 24.7,
+    "carrier": "BRT",
+    "tracking_code": "BRT28960257",
+    "estimated_delivery": "2026-10-05",
+    "delivered_at": "2026-10-05",
+    "return": {
+      "requested_at": "2026-10-10",
+      "reason": "Bulbi ammuffiti all'apertura della confezione",
+      "refund_amount_eur": null,
+      "refunded_at": null
+    }
+  },
+  {
+    "order_id": "1056",
+    "customer_name": "Alessia Gallo",
+    "customer_email": "alessia.gallo@example.com",
+    "created_at": "2026-09-12",
+    "status": "returned",
+    "items": [
+      {
+        "sku": "GT-BUL-001",
+        "name": "Bulbi di tulipano Triumph, mix di colori (confezione da 10)",
+        "quantity": 3,
+        "unit_price_eur": 7.9
+      }
+    ],
+    "total_eur": 23.7,
+    "carrier": "BRT",
+    "tracking_code": "BRT39838286",
+    "estimated_delivery": "2026-09-16",
+    "delivered_at": "2026-09-16",
+    "return": {
+      "requested_at": "2026-09-23",
+      "reason": "Prodotto non conforme alla descrizione",
+      "refund_amount_eur": null,
+      "refunded_at": null
+    }
+  },
+  {
+    "order_id": "1057",
+    "customer_name": "Alessia Pellegrini",
+    "customer_email": "alessia.pellegrini@example.com",
+    "created_at": "2026-09-17",
+    "status": "returned",
+    "items": [
+      {
+        "sku": "GT-BUL-001",
+        "name": "Bulbi di tulipano Triumph, mix di colori (confezione da 10)",
+        "quantity": 3,
+        "unit_price_eur": 7.9
+      },
+      {
+        "sku": "GT-SEM-001",
+        "name": "Semi di basilico genovese (bustina da 2 g)",
+        "quantity": 1,
+        "unit_price_eur": 2.9
+      }
+    ],
+    "total_eur": 26.6,
+    "carrier": "BRT",
+    "tracking_code": "BRT32334363",
+    "estimated_delivery": "2026-09-21",
+    "delivered_at": "2026-09-21",
+    "return": {
+      "requested_at": "2026-09-22",
+      "reason": "Articolo arrivato danneggiato",
+      "refund_amount_eur": null,
+      "refunded_at": null
+    }
+  },
+  {
+    "order_id": "1058",
+    "customer_name": "Sara Caruso",
+    "customer_email": "sara.caruso@example.com",
+    "created_at": "2026-09-02",
+    "status": "refunded",
+    "items": [
+      {
+        "sku": "GT-SEM-003",
+        "name": "Semi di carota di Chioggia (bustina da 4 g)",
+        "quantity": 2,
+        "unit_price_eur": 2.6
+      }
+    ],
+    "total_eur": 5.2,
+    "carrier": "BRT",
+    "tracking_code": "BRT36703004",
+    "estimated_delivery": "2026-09-06",
+    "delivered_at": "2026-09-06",
+    "return": {
+      "requested_at": "2026-09-16",
+      "reason": "Taglia del vaso diversa da quella attesa",
+      "refund_amount_eur": 5.2,
+      "refunded_at": "2026-09-20"
+    }
+  },
+  {
+    "order_id": "1059",
+    "customer_name": "Beatrice Lombardi",
+    "customer_email": "beatrice.lombardi@example.com",
+    "created_at": "2026-09-14",
+    "status": "refunded",
+    "items": [
+      {
+        "sku": "GT-SEM-003",
+        "name": "Semi di carota di Chioggia (bustina da 4 g)",
+        "quantity": 1,
+        "unit_price_eur": 2.6
+      },
+      {
+        "sku": "GT-VAS-003",
+        "name": "Vaso autoirrigante con riserva d'acqua, diametro 30 cm",
+        "quantity": 3,
+        "unit_price_eur": 27.5
+      },
+      {
+        "sku": "GT-VAS-002",
+        "name": "Fioriera da balcone in resina, 60 cm, con sottovaso",
+        "quantity": 3,
+        "unit_price_eur": 19.9
+      }
+    ],
+    "total_eur": 144.8,
+    "carrier": "GLS",
+    "tracking_code": "GLS43897646",
+    "estimated_delivery": "2026-09-18",
+    "delivered_at": "2026-09-18",
+    "return": {
+      "requested_at": "2026-09-24",
+      "reason": "Reso parziale: un solo articolo restituito",
+      "refund_amount_eur": 2.6,
+      "refunded_at": "2026-09-28"
+    }
+  },
+  {
+    "order_id": "1060",
+    "customer_name": "Chiara De Luca",
+    "customer_email": "chiara.deluca@example.com",
+    "created_at": "2026-09-20",
+    "status": "refunded",
+    "items": [
+      {
+        "sku": "GT-ATT-001",
+        "name": "Forbici da potatura bypass, lama in acciaio giapponese",
+        "quantity": 2,
+        "unit_price_eur": 24.9
+      }
+    ],
+    "total_eur": 49.8,
+    "carrier": "BRT",
+    "tracking_code": "BRT23044035",
+    "estimated_delivery": "2026-09-24",
+    "delivered_at": "2026-09-24",
+    "return": {
+      "requested_at": "2026-09-28",
+      "reason": "Prodotto non conforme alla descrizione",
+      "refund_amount_eur": 49.8,
+      "refunded_at": "2026-10-02"
+    }
+  },
+  {
+    "order_id": "1061",
+    "customer_name": "Beatrice Villa",
+    "customer_email": "beatrice.villa@example.com",
+    "created_at": "2026-10-05",
+    "status": "cancelled",
+    "items": [
+      {
+        "sku": "GT-TER-002",
+        "name": "Substrato specifico per bulbi, drenante, sacco da 20 litri",
+        "quantity": 3,
+        "unit_price_eur": 8.9
+      }
+    ],
+    "total_eur": 26.7,
+    "carrier": null,
+    "tracking_code": null,
+    "estimated_delivery": null,
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1062",
+    "customer_name": "Simone Mancini",
+    "customer_email": "simone.mancini@example.com",
+    "created_at": "2026-10-10",
+    "status": "cancelled",
+    "items": [
+      {
+        "sku": "GT-SEM-003",
+        "name": "Semi di carota di Chioggia (bustina da 4 g)",
+        "quantity": 3,
+        "unit_price_eur": 2.6
+      },
+      {
+        "sku": "GT-FER-002",
+        "name": "Concime liquido per piante fiorite, flacone da 1 litro",
+        "quantity": 3,
+        "unit_price_eur": 7.5
+      }
+    ],
+    "total_eur": 30.3,
+    "carrier": null,
+    "tracking_code": null,
+    "estimated_delivery": null,
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1063",
+    "customer_name": "Stefano Mancini",
+    "customer_email": "stefano.mancini@example.com",
+    "created_at": "2026-09-27",
+    "status": "delivered",
+    "items": [
+      {
+        "sku": "GT-TER-002",
+        "name": "Substrato specifico per bulbi, drenante, sacco da 20 litri",
+        "quantity": 2,
+        "unit_price_eur": 8.9
+      }
+    ],
+    "total_eur": 17.8,
+    "carrier": "GLS",
+    "tracking_code": "GLS63614259",
+    "estimated_delivery": "2026-10-01",
+    "delivered_at": "2026-10-01",
+    "return": null
+  },
+  {
+    "order_id": "1064",
+    "customer_name": "Marco Moretti",
+    "customer_email": "marco.moretti@example.com",
+    "created_at": "2026-10-08",
+    "status": "shipped",
+    "items": [
+      {
+        "sku": "GT-SEM-002",
+        "name": "Semi di misticanza invernale da taglio (bustina da 5 g)",
+        "quantity": 1,
+        "unit_price_eur": 3.4
+      },
+      {
+        "sku": "GT-VAS-002",
+        "name": "Fioriera da balcone in resina, 60 cm, con sottovaso",
+        "quantity": 2,
+        "unit_price_eur": 19.9
+      }
+    ],
+    "total_eur": 43.2,
+    "carrier": "BRT",
+    "tracking_code": "BRT41181182",
+    "estimated_delivery": "2026-10-13",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1065",
+    "customer_name": "Alessia Ferri",
+    "customer_email": "alessia.ferri@example.com",
+    "created_at": "2026-10-12",
+    "status": "processing",
+    "items": [
+      {
+        "sku": "GT-VAS-003",
+        "name": "Vaso autoirrigante con riserva d'acqua, diametro 30 cm",
+        "quantity": 3,
+        "unit_price_eur": 27.5
+      }
+    ],
+    "total_eur": 82.5,
+    "carrier": null,
+    "tracking_code": null,
+    "estimated_delivery": "2026-10-18",
+    "delivered_at": null,
+    "return": null
+  },
+  {
+    "order_id": "1066",
+    "customer_name": "Davide Rizzo",
+    "customer_email": "davide.rizzo@example.com",
+    "created_at": "2026-08-13",
+    "status": "delivered",
+    "items": [
+      {
+        "sku": "GT-TER-001",
+        "name": "Terriccio universale torba-free, sacco da 50 litri",
+        "quantity": 1,
+        "unit_price_eur": 11.9
+      }
+    ],
+    "total_eur": 11.9,
+    "carrier": "GLS",
+    "tracking_code": "GLS36120254",
+    "estimated_delivery": "2026-08-17",
+    "delivered_at": "2026-08-17",
+    "return": null
+  },
+  {
+    "order_id": "1067",
+    "customer_name": "Davide Conti",
+    "customer_email": "davide.conti@example.com",
+    "created_at": "2026-10-04",
+    "status": "shipped",
+    "items": [
+      {
+        "sku": "GT-ATT-002",
+        "name": "Trapiantatoio a mano in acciaio inox, manico in frassino",
+        "quantity": 3,
+        "unit_price_eur": 12.5
+      }
+    ],
+    "total_eur": 37.5,
+    "carrier": "BRT",
+    "tracking_code": "BRT32816491",
+    "estimated_delivery": "2026-10-08",
+    "delivered_at": null,
+    "return": null
+  }
+]

@@ -83,6 +83,8 @@ docstring-code-format = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# scripts/ holds runnable data tooling, not an installed package.
+pythonpath = ["scripts"]
 markers = [
     "llm: integration test that performs a real LLM call (excluded from `make test`)",
 ]

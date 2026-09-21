@@ -36,7 +36,7 @@ DoD:
 
 ---
 
-## [ ] Fase 1 — Dati sintetici 🔍 REVIEW
+## [x] Fase 1 — Dati sintetici ✅ completata (revisione utente effettuata)
 
 **Obiettivo**: knowledge base e ordini realistici, coerenti tra loro, validati automaticamente.
 

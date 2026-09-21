@@ -1,7 +1,9 @@
 # Installed by `make setup`. Keeps commits lint-clean without waiting for CI.
 repos:
+  # Keep this pinned to the ruff version in pyproject's dev group: pre-commit runs its
+  # own copy, and a version skew makes `make lint` and the commit hook disagree.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.6
+    rev: v0.16.8
     hooks:
       - id: ruff
         args: [--fix]
