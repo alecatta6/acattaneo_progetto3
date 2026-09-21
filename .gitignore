@@ -1,0 +1,29 @@
+# Secrets — never commit
+.env
+.env.local
+
+# Generated artefacts (rebuilt by `make index` / produced at runtime)
+vector_store/
+escalations.jsonl
+eval/results/traces.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Model caches (multilingual-e5-base is ~1.1 GB)
+.cache/
+hf_cache/
+
+# OS
+.DS_Store

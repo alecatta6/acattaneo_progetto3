@@ -1,0 +1,230 @@
+# Registro delle decisioni architetturali
+
+Formato: contesto → decisione → alternative scartate → conseguenze.
+Questo file è la fonte primaria della relazione tecnica. Aggiungere una voce per ogni scelta non
+ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
+
+---
+
+## ADR-001 — Sviluppo in repository locale, consegna via notebook Colab
+
+- **Contesto**: la consegna è un link Colab; la traccia chiede anche un repository.
+- **Decisione**: sviluppo in un repository Python con Claude Code; il notebook clona il repo e ne
+  esegue le parti, contenendo la relazione.
+- **Alternative scartate**: sviluppo interamente in Colab (niente git e test, sessioni
+  effimere); celle `%%writefile` (codice poco manutenibile).
+- **Conseguenze**: codice testabile e modulare; serve verificare il notebook su runtime pulito.
+
+## ADR-002 — Deterministico prima del probabilistico nella risposta
+
+- **Contesto**: `sources`, `needs_human` e `confidence` generati liberamente dall'LLM possono
+  essere inventati o incoerenti con le azioni svolte.
+- **Decisione**: `sources` filtrate sui documenti realmente recuperati; `needs_human` derivato
+  dall'invocazione del tool di escalation; `confidence` con cap basato sugli score del retrieval.
+- **Alternative scartate**: output interamente generato dall'LLM.
+- **Conseguenze**: impossibili fonti inesistenti o flag incoerenti; metriche deterministiche
+  gratuite nell'evaluation.
+
+## ADR-003 — Data di business simulata
+
+- **Contesto**: le risposte dipendono dalla data (consegne, stagionalità) e il notebook verrà
+  eseguito in una data ignota.
+- **Decisione**: `Clock` iniettato; default `FrozenClock(2026-10-12)`, configurabile.
+- **Alternative scartate**: data reale (ordini ed evaluation perdono validità nel tempo); ordini
+  rigenerati a ogni esecuzione (ground truth instabile).
+- **Conseguenze**: sistema riproducibile; la stagione "corrente" è autunno per costruzione.
+
+## ADR-004 — Memoria a breve termine: summarization
+
+- **Contesto**: nel customer care le entità citate presto (numero d'ordine) servono molti turni
+  dopo.
+- **Decisione**: summarization con soglia in token e ultimi N messaggi integri, prompt che
+  preserva entità.
+- **Alternative scartate**: trimming (perde le entità iniziali); trimming + stato strutturato
+  (più robusto ma più complesso, citato come evoluzione).
+- **Conseguenze**: una chiamata LLM in più oltre soglia; verificata con test ed evaluation
+  conversazionale.
+
+## ADR-005 — Embedding locali multilingue
+
+- **Contesto**: KB in italiano, notebook eseguito da terzi, nessuna GPU necessaria.
+- **Decisione**: `intfloat/multilingual-e5-base` in locale.
+- **Alternative scartate**: embedding via API (secondo provider, costo per chunk); modelli
+  solo-inglese.
+- **Conseguenze**: nessun costo di indicizzazione; attenzione ai prefissi `query:`/`passage:`
+  e alla calibrazione delle soglie.
+
+## ADR-006 — `doc_id` con estensione, rappresentazione unica
+
+- **Contesto**: la SPEC definiva `doc_id` senza estensione (§4.3) ma lo usava con estensione in
+  `sources` (§5) e in `expected_sources` (§10.1). Due rappresentazioni della stessa entità.
+- **Decisione**: `doc_id` include sempre l'estensione (`guides/bulbi_autunnali.md`), identico in
+  frontmatter, metadati dei chunk, `sources` ed `expected_sources`.
+- **Alternative scartate**: funzione di conversione in un punto unico (un'occasione in più di
+  sbagliare in silenzio: un mismatch di suffisso porta `source_recall` a 0 senza alcun errore);
+  due campi distinti nel frontmatter (ridondanza da mantenere a mano su 35 file).
+- **Conseguenze**: nessuna conversione in nessun punto del sistema. SPEC §4.3 aggiornata.
+
+## ADR-007 — `confidence` disaccoppiata da `needs_human`
+
+- **Contesto**: la SPEC imponeva `cap = low` a ogni escalation.
+- **Decisione**: l'escalation non influisce sulla confidence. `confidence` qualifica la risposta
+  (ed è limitata solo dalla qualità del retrieval); `needs_human` ne governa l'instradamento.
+- **Alternative scartate**: override assoluto a `low` (più semplice, ma confonde "non sono sicuro"
+  con "serve un operatore": un rimborso correttamente riconosciuto come fuori termine è una
+  risposta *giusta*, e marcarla `low` penalizza proprio i casi gestiti bene nella metrica GEval);
+  cap intermedio a `medium` (terza regola da giustificare, senza un beneficio chiaro).
+- **Conseguenze**: i due campi restano ortogonali e indipendentemente misurabili nell'evaluation.
+
+## ADR-008 — `needs_human` con semantica di sessione
+
+- **Contesto**: `needs_human` legato al singolo turno tornava `false` al turno successivo a
+  un'escalation, pur con il ticket ancora aperto — in contrasto con l'idempotenza per
+  sessione+motivo dell'escalation (§7).
+- **Decisione**: `needs_human = true` finché la sessione ha almeno un ticket aperto.
+- **Alternative scartate**: semantica di turno (lettera della SPEC originale; più semplice, ma
+  semanticamente povera per un customer care reale).
+- **Conseguenze**: serve uno stato di sessione, che resta **deterministico** perché derivato dal
+  registro delle escalation e non da un giudizio dell'LLM (ADR-002 è salvo). `expected_needs_human`
+  va impostato di conseguenza in tutte le conversazioni multi-turn del dataset. **Da rivedere** se
+  l'esempio della traccia mostrasse `needs_human: false` dopo un'escalation.
+
+## ADR-009 — Header `X-Fallback` sulle risposte di ripiego
+
+- **Contesto**: §11 impone status 200 anche sugli errori del provider, per non rompere il
+  contratto a 4 campi della traccia. Così però un'interruzione del provider è invisibile.
+- **Decisione**: il JSON resta invariato; un header `X-Fallback: true` segnala il ripiego.
+- **Alternative scartate**: solo log (l'osservabilità resta lato server); status non-200 (rompe
+  il contratto richiesto dalla traccia).
+- **Conseguenze**: coerente con la scelta già fatta per `X-Session-Id`. Costo implementativo nullo.
+
+## ADR-010 — Modello giudice separato, validato in modo pigro
+
+- **Contesto**: un giudice diverso dal modello valutato riduce il bias di auto-valutazione, ma un
+  requisito rigido rischia di bloccare "Esegui tutto" su Colab.
+- **Decisione**: `GREENTHUMB_EVAL_MODEL` è obbligatorio, ma validato **solo** quando l'evaluation
+  viene effettivamente eseguita, non all'import del pacchetto.
+- **Alternative scartate**: ripiego silenzioso sul modello dell'agente (rischio di pubblicare
+  risultati auto-valutati senza accorgersene); rinuncia al giudice separato (si perde un punto
+  di merito facile).
+- **Conseguenze**: il notebook carica i risultati già salvati (§13) e gira con il solo segreto
+  dell'agente; chi rilancia l'evaluation riceve un errore esplicito. Con OpenAI come provider
+  (ADR-015) agente e giudice condividono la stessa chiave: nessun secondo provider da configurare.
+
+## ADR-011 — Nessuna escalation al primo ordine non trovato
+
+- **Contesto**: §8 richiedeva l'escalation solo dopo un secondo tentativo con numero confermato,
+  ma §10.1 collocava "ordine inesistente" fra gli `edge_cases`, tipicamente mono-turno.
+- **Decisione**: primo tentativo → `found: false` e invito a verificare il numero, con
+  `needs_human = false`. L'escalation `order_not_found` scatta solo al secondo tentativo confermato.
+- **Alternative scartate**: escalation immediata (genera ticket per ogni errore di battitura).
+- **Conseguenze**: la riga `edge_cases` della tabella §10.1 è stata annotata per non lasciare
+  l'aspettativa ambigua a chi scriverà il dataset in Fase 7.
+
+## ADR-012 — Limite di iterazioni ReAct a 8
+
+- **Contesto**: §8 proponeva 6. Se lo structured output è realizzato come tool call
+  (*ToolStrategy*), consuma un'iterazione: un turno multi-tool legittimo arriva a 5–6 passi.
+- **Decisione**: 8, con margine prudenziale.
+- **Alternative scartate**: 6 (rischio di troncare turni validi e falsare l'evaluation con
+  fallback spuri); fissarlo dopo lo spike (rimanda una scelta il cui costo di errore è basso).
+- **Conseguenze**: in caso di loop patologico si spendono al più due chiamate in più. Lo spike n.1
+  misurerà il consumo reale e il valore verrà confermato o corretto qui.
+
+## ADR-013 — Prefisso `GREENTHUMB_` su tutte le variabili di progetto
+
+- **Contesto**: §12 mescolava nomi prefissati e generici (`LLM_MODEL`, `RETRIEVAL_TOP_K`).
+- **Decisione**: prefisso su tutte le variabili di progetto; fanno eccezione le chiavi dei
+  provider, il cui nome è imposto dall'SDK.
+- **Alternative scartate**: nessun prefisso (collisione concreta con l'ambiente condiviso di Colab).
+- **Conseguenze**: `.env.example` e i Secrets di Colab usano i nomi prefissati.
+
+## ADR-014 — Python 3.12 gestito da uv
+
+- **Contesto**: la macchina di sviluppo ha solo Python 3.14.7 (Homebrew); Colab gira su 3.12.
+- **Decisione**: `uv python install 3.12`, interprete isolato per il progetto,
+  `requires-python = "==3.12.*"`.
+- **Alternative scartate**: 3.14 (tecnicamente possibile — `litellm` ammette `<3.15` e torch 2.14
+  ha ruote cp314 — ma il lockfile verrebbe risolto per un interprete diverso da quello di
+  consegna); Homebrew `python@3.12` (stato di sistema modificabile da `brew upgrade`).
+- **Conseguenze**: `uv.lock` e `requirements.txt` allineati al runtime di consegna.
+
+## ADR-015 — OpenAI come provider dell'agente e del giudice
+
+- **Contesto**: la scelta del provider determina la strategia di structured output e l'aggancio
+  dei giudici RAGAS/DeepEval.
+- **Decisione**: OpenAI via LiteLLM.
+- **Alternative scartate**: Anthropic e Gemini (entrambi validi, ma con uno strato di traduzione
+  in più da verificare attraverso LiteLLM).
+- **Conseguenze**: probabile *ProviderStrategy* con `response_format` nativo, che non consuma
+  iterazioni del ciclo ReAct; RAGAS 0.4 (che dipende da `openai>=1.0.0`) e DeepEval 4.x hanno
+  entrambi OpenAI come percorso nativo, riducendo il lavoro di wiring del giudice.
+
+## ADR-016 — Dataset di evaluation a 20 conversazioni
+
+- **Contesto**: l'enum `reason` dell'escalation ha 7 valori, coperti da sole 2 conversazioni.
+- **Decisione**: 20 conversazioni; `escalation` e `multi_tool` salgono a 3 ciascuna.
+- **Alternative scartate**: ribilanciare a somma costante togliendo `product_info` e
+  `agronomic_advice` (il retrieval su scheda prodotto è la parte meno rischiosa, ma resta una
+  categoria richiesta); distribuzione originale (copertura insufficiente dove il sistema cede).
+- **Conseguenze**: ogni riesecuzione dell'evaluation costa 2 conversazioni in più (agente + giudice).
+
+## ADR-017 — Knowledge base completa in Fase 1, senza fetta verticale
+
+- **Contesto**: la Fase 1 richiede 35 documenti italiani scritti a mano *prima* che l'agente
+  esista. Si era valutato di ridurre la KB per arrivare prima end-to-end.
+- **Decisione**: si mantiene l'ordine del PLAN, con KB completa in Fase 1.
+- **Alternative scartate**: fetta verticale con ~10 documenti (anticipa i rischi architetturali,
+  ma obbliga a calibrare le soglie di retrieval due volte, perché soglie tarate su 10 documenti
+  non valgono su 35); spike end-to-end esteso in Fase 0 (mezza giornata di lavoro usa-e-getta).
+- **Conseguenze**: il rischio architetturale ricade interamente sugli spike di Fase 0; lo spike
+  n.1 verifica structured output e artifact con un tool fittizio, prima di investire nei contenuti.
+  La calibrazione delle soglie avviene una volta sola, su dati definitivi.
+
+## ADR-018 — Dipendenze e telemetria: due vincoli non negoziabili
+
+- **Contesto**: due dettagli emersi ispezionando i metadati delle release su PyPI.
+- **Decisione**: (a) installare `langchain-huggingface[full]`, perché nella 1.2.2
+  `sentence-transformers` e `transformers` sono dichiarati **solo** sotto l'extra `full`: con
+  un'installazione nuda `HuggingFaceEmbeddings` fallisce all'import; (b) disattivare esplicitamente
+  la telemetria di DeepEval, perché un notebook di consegna non deve caricare i risultati di
+  valutazione su un servizio cloud terzo senza che chi lo esegue lo sappia.
+- **Conseguenze**: l'extra `full` porta con sé `transformers>=5.0.0,<6`, major version su cui gran
+  parte del materiale online è obsoleto — vale la regola 3 di CLAUDE.md. Si noti anche che
+  `langchain-litellm` 0.7.2 non dichiara **alcuna** dipendenza (né `langchain-core` né `litellm`):
+  nessun resolver ci proteggerà da un disallineamento, che va verificato a mano.
+
+## ADR-019 — Pin di `langchain-community` a 0.3.31 per far funzionare RAGAS
+
+- **Contesto**: con lo stack di SPEC §2 risolto liberamente, `import ragas` fallisce:
+  `ModuleNotFoundError: No module named 'langchain_community.chat_models.vertexai'`.
+  Causa: `ragas/llms/base.py` importa `ChatVertexAI` e `VertexAI` da `langchain_community` in modo
+  **incondizionato** (riga 12), ma `langchain-community` 0.4.x ha svuotato `chat_models/` di tutti
+  gli integratori di provider. RAGAS dichiara `langchain-community` **senza alcun pin**, quindi il
+  resolver sceglie 0.4.2 e il pacchetto risulta inutilizzabile. Non è aggirabile ignorando il
+  modulo: la catena parte da `ragas/__init__.py`, quindi *qualsiasi* import di ragas esplode.
+- **Decisione**: pin esplicito `langchain-community==0.3.31`. È l'ultima release che contiene
+  ancora `chat_models/vertexai.py` **ed** è l'unica 0.3.x il cui vincolo su langchain-core
+  (`<2.0.0,>=0.3.78`) ammette il core 1.6.3 richiesto da langchain 1.4.2. Le 0.3.x precedenti
+  richiedono `langchain-core<1.0.0` e vanno in conflitto diretto.
+- **Alternative scartate**: shim fittizio del modulo mancante (funziona, ma è fragile e
+  indifendibile in un notebook di consegna); downgrade di RAGAS (ci riporterebbe a un'API ancora
+  più lontana da quella documentata); rinuncia a RAGAS (è un requisito d'esame, R6).
+- **Conseguenze**: `langchain-community` scende da 0.4.2 a 0.3.31 e rientra `langchain-classic`
+  fra le dipendenze rimosse; verificato che `create_agent`, `ChatLiteLLM`, `Chroma` e
+  `HuggingFaceEmbeddings` continuano a importarsi correttamente dopo il downgrade. Il pin è
+  **fragile per costruzione**: dipende da un modulo deprecato che prima o poi sparirà. Va
+  rivisitato a ogni aggiornamento di RAGAS, e citato nella relazione come esempio concreto di
+  rischio di catena delle dipendenze in un ecosistema in rapida evoluzione.
+
+## ADR-020 — RAGAS: usare `ragas.metrics.collections`, non `ragas.metrics`
+
+- **Contesto**: importando `Faithfulness` e `LLMContextPrecisionWithReference` da `ragas.metrics`,
+  la 0.4.3 emette un `DeprecationWarning` esplicito: quel percorso sarà rimosso in v1.0 e il
+  sostituto è `ragas.metrics.collections`.
+- **Decisione**: usare `ragas.metrics.collections` fin da subito.
+- **Conseguenze**: conferma la regola 3 di CLAUDE.md — quasi tutto il materiale online su RAGAS
+  usa il percorso deprecato. Le firme esatte delle due metriche restano da verificare nello
+  spike n.5 (fase 0, passo 4).
+
+<!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
