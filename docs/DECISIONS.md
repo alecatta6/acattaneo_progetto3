@@ -315,4 +315,30 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   sessionfinish...` anche nei test unitari, che con lui non c'entrano nulla. Innocuo, ma se
   dovesse dare fastidio si disattiva con `-p no:deepeval`.
 
+## ADR-025 — Isolare i test unitari dal `.env`, che DeepEval inietta di nascosto
+
+- **Contesto**: i test unitari, verdi fino a quel momento, sono diventati rossi **nel momento
+  esatto in cui è comparso un `.env`** nel progetto, senza che una riga di codice cambiasse.
+- **Causa**: `import deepeval` chiama `load_dotenv()` come effetto collaterale, riversando
+  l'intero `.env` in `os.environ`. DeepEval installa inoltre un plugin pytest che si carica
+  automaticamente a ogni esecuzione. Risultato: `Settings(_env_file=None)`, che *disabilita*
+  correttamente la lettura del file, non serviva a nulla — i valori erano già nell'ambiente
+  reale del processo. Verificato: `'GREENTHUMB_EVAL_MODEL' in os.environ` passa da `False` a
+  `True` per il solo `import deepeval`, e `pytest -p no:deepeval` rende i test di nuovo verdi.
+- **Perché è grave**: rende i test unitari dipendenti dalla configurazione locale di chi li
+  esegue. Due sviluppatori con `.env` diversi ottengono esiti diversi, e la CI (dove `.env` non
+  esiste) diverge da entrambi. È esattamente il tipo di accoppiamento invisibile che un test
+  dovrebbe escludere per costruzione.
+- **Decisione**: doppia difesa. (a) `-p no:deepeval` negli `addopts` di pytest: le metriche
+  DeepEval le invochiamo direttamente (ADR-024), il plugin non ci serve. (b) Una fixture
+  `autouse` in `tests/conftest.py` che rimuove `GREENTHUMB_*` e le chiavi dei provider
+  dall'ambiente prima di ogni test. Verificato che con la sola fixture, e il plugin
+  **riattivato a forza**, i test restano verdi.
+- **Alternative scartate**: affidarsi al solo `_env_file=None` (è ciò che è appena fallito);
+  il solo `-p no:deepeval` (protegge da questo plugin, non dal prossimo pacchetto che chiami
+  `load_dotenv()` all'import).
+- **Conseguenze**: aggiunto un test di regressione. Lezione generale da citare nella relazione:
+  in un ecosistema dove le librerie di valutazione fanno I/O all'import, l'isolamento dei test
+  va imposto attivamente, non dato per scontato.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->

@@ -86,4 +86,7 @@ testpaths = ["tests"]
 markers = [
     "llm: integration test that performs a real LLM call (excluded from `make test`)",
 ]
-addopts = "-q"
+# -p no:deepeval: importing deepeval calls load_dotenv(), which leaks the developer's
+# .env into os.environ for the whole session. We call its metrics directly (ADR-023/024),
+# so the plugin buys us nothing. See ADR-025.
+addopts = "-q -p no:deepeval"

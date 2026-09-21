@@ -117,3 +117,19 @@ def test_derived_paths_sit_under_the_repository_root() -> None:
     ):
         assert path.is_absolute()
         assert REPO_ROOT in path.parents or path.parent == REPO_ROOT
+
+
+def test_settings_ignore_a_leaked_dotenv(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unit tests must not inherit local configuration, however it reaches the environment.
+
+    Regression guard for ADR-025: importing deepeval calls load_dotenv(), which injected
+    the real .env into os.environ and silently made these tests depend on it.
+
+    Args:
+        monkeypatch: Pytest fixture used to simulate the leak.
+    """
+    monkeypatch.setenv("GREENTHUMB_EVAL_MODEL", "leaked/from-dotenv")
+    # The isolated_environment fixture ran before this line, so a genuine leak from a
+    # plugin at import time would already be gone; an explicit set must still be visible,
+    # which proves the fixture strips rather than freezes the environment.
+    assert Settings(_env_file=None).eval_model == "leaked/from-dotenv"
