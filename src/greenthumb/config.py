@@ -152,6 +152,20 @@ class Settings(BaseSettings):
         """
         return REPO_ROOT / "escalations.jsonl"
 
+    @property
+    def judge_model_slug(self) -> str:
+        """Return the judge model in the form the provider's own API expects.
+
+        The project carries two forms of the same identifier. LiteLLM, which drives the
+        agent, needs a route prefix (``openrouter/openai/gpt-4.1``). RAGAS and DeepEval
+        bypass LiteLLM and talk to the OpenAI-compatible endpoint directly, where that
+        prefix is not a model and the call fails. See ADR-033.
+
+        Returns:
+            The judge model identifier without the LiteLLM route prefix.
+        """
+        return self.eval_model.removeprefix("openrouter/")
+
     # --- Behaviour ---
     def clock(self) -> Clock:
         """Build the clock for the configured business date.

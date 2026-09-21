@@ -144,3 +144,15 @@ def test_output_cap_rejects_an_absurd_value() -> None:
     """A cap high enough to reproduce the 402 is a configuration error."""
     with pytest.raises(ValidationError, match="max_output_tokens"):
         _settings(max_output_tokens=65536)
+
+
+def test_judge_slug_strips_the_litellm_route_prefix() -> None:
+    """RAGAS and DeepEval call the provider directly, where the route prefix is not a model."""
+    settings = _settings(eval_model="openrouter/openai/gpt-4.1")
+    assert settings.eval_model == "openrouter/openai/gpt-4.1"
+    assert settings.judge_model_slug == "openai/gpt-4.1"
+
+
+def test_judge_slug_is_a_no_op_without_a_route_prefix() -> None:
+    """A plain identifier must pass through untouched, so a provider switch stays safe."""
+    assert _settings(eval_model="openai/gpt-4.1").judge_model_slug == "openai/gpt-4.1"

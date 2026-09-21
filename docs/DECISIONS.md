@@ -417,9 +417,11 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   1. **Tetto di credito.** Senza un `max_tokens` esplicito LiteLLM chiede fino a 65536 token di
      output e OpenRouter risponde `402`: la chiave "can only afford ~24668". Tutte le chiamate
      vanno quindi fatte con `max_tokens` esplicito e contenuto.
-  2. **DeepEval non passa.** Non per incompatibilità di API, ma perché non impone un
-     `max_tokens` e incappa nello stesso `402`. Il test dei logprob richiesti da `GEval`
-     (ADR-024) **non è stato quindi ancora eseguito**: resta un rischio aperto.
+  2. **DeepEval** inizialmente non passava, non per incompatibilità di API ma per lo stesso
+     `402`. **Risolto** con l'acquisto di credito (ADR-032) e il tetto di ADR-031.
+     **Punto chiuso**: OpenRouter restituisce i logprob richiesti da `GEval` — verificato con
+     una chiamata diretta, `top_logprobs=20` richiesti e 20 ricevuti — e `GEval` funziona
+     end-to-end (punteggio 1.0 con motivazione in italiano). SPEC §10.3 resta invariata.
 - **Osservazione sulla riproducibilità**: OpenRouter bilancia le richieste fra più fornitori
   a monte (nell'errore diagnostico compaiono sia Azure sia OpenAI). Due esecuzioni identiche
   possono essere servite da infrastrutture diverse — da citare fra i limiti nella relazione.
@@ -484,5 +486,29 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Conseguenze**: la via gratuita non fa risparmiare cinque dollari, fa spendere giorni di
   attesa e aggiunge un rischio sulla riproducibilità del deliverable. Il confronto è documentato
   qui perché è una scelta ingegneristica motivata, non una resa al costo.
+
+## ADR-033 — Due forme dello stesso identificatore di modello
+
+- **Contesto**: il progetto usa lo stesso modello per strade diverse, e le due strade vogliono
+  identificatori diversi. Scoperto facendo funzionare i giudici per davvero.
+- **Le due forme**:
+  - **LiteLLM** (agente): richiede il prefisso di rotta — `openrouter/openai/gpt-4.1-mini`.
+  - **RAGAS e DeepEval**: scavalcano LiteLLM e parlano direttamente all'endpoint
+    OpenAI-compatibile di OpenRouter (`https://openrouter.ai/api/v1`), dove `openrouter/...`
+    non è un modello esistente e la chiamata fallisce. Vogliono lo slug del provider:
+    `openai/gpt-4.1`.
+- **Decisione**: una sola proprietà, `Settings.judge_model_slug`, che rimuove il prefisso di
+  rotta. Nessun modulo ricava l'identificatore da sé.
+- **Alternative scartate**: due variabili d'ambiente distinte (si disallineano al primo cambio di
+  modello); `.removeprefix()` sparso nei moduli dell'evaluation (la duplicazione che ADR-006 ha
+  già eliminato per i `doc_id`).
+- **Conseguenze**: verificato end-to-end con `scripts/spikes/spike_judges.py`, che esegue
+  davvero le quattro metriche previste da SPEC §10.3: Faithfulness 1.0,
+  ContextPrecisionWithReference ~1.0, GEval 1.0, AnswerRelevancy 0.5.
+- **Osservazione per la fase 7**: **AnswerRelevancy ha dato 0.5 su una risposta corretta e
+  pertinente**. Probabile causa: la metrica penalizza le affermazioni accessorie ("in terreno
+  ben drenato") come non richieste dalla domanda. Non è un difetto del sistema ma della
+  calibrazione della metrica su risposte brevi in italiano: va tenuto d'occhio in fase 7, dove
+  un punteggio basso va attribuito alla causa giusta prima di "correggere" l'agente.
 
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
