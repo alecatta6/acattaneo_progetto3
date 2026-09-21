@@ -63,11 +63,19 @@ class Settings(BaseSettings):
     # --- Retrieval ---
     embedding_model: str = Field(default="intfloat/multilingual-e5-base")
     retrieval_top_k: int = Field(default=4, ge=1, le=20)
+    # Calibrated in phase 2 on the real knowledge base; see docs/retrieval_calibration.md
+    # and ADR-040. Expressed as cosine similarity, 1 - distance (ADR-021).
     retrieval_score_low: float = Field(
-        default=0.0, description="Below this, no document is considered relevant. Calibrated."
+        default=0.813,
+        ge=0.0,
+        le=1.0,
+        description="Below this, no document counts as relevant.",
     )
     retrieval_score_high: float = Field(
-        default=0.0, description="At or above this, retrieval quality allows high confidence."
+        default=0.864,
+        ge=0.0,
+        le=1.0,
+        description="At or above this, retrieval quality allows high confidence.",
     )
 
     # --- Short-term memory (ADR-004) ---

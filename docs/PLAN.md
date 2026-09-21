@@ -57,7 +57,7 @@ DoD:
 
 ---
 
-## [ ] Fase 2 — Indicizzazione e retrieval
+## [x] Fase 2 — Indicizzazione e retrieval ✅ completata
 
 **Obiettivo**: vector store costruito e soglie di rilevanza calibrate su dati reali.
 

@@ -33,11 +33,12 @@ def test_defaults_match_the_specification() -> None:
     assert settings.embedding_model == "intfloat/multilingual-e5-base"  # ADR-005
 
 
-def test_retrieval_thresholds_default_to_zero_because_they_are_calibrated() -> None:
-    """Phase 2 calibrates the thresholds; an unset value must be obvious, not plausible."""
+def test_retrieval_thresholds_are_the_calibrated_values() -> None:
+    """Phase 2 measured these on the real corpus; see docs/retrieval_calibration.md."""
     settings = _settings()
-    assert settings.retrieval_score_low == 0.0
-    assert settings.retrieval_score_high == 0.0
+    assert settings.retrieval_score_low == 0.813
+    assert settings.retrieval_score_high == 0.864
+    assert settings.retrieval_score_low < settings.retrieval_score_high
 
 
 def test_project_variables_are_read_with_the_greenthumb_prefix(

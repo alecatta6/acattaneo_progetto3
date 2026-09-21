@@ -597,4 +597,87 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   gli attriti pratici del tooling: un controllo di qualità che si contraddice da solo erode la
   fiducia nel controllo stesso.
 
+## ADR-039 — Metadati appiattiti al caricamento, non all'indicizzazione
+
+- **Contesto**: `season` e `related_skus` sono liste nel frontmatter, ma Chroma accetta solo
+  valori scalari come metadati (str, int, float, bool). Passargli una lista solleva un errore
+  al momento dell'indicizzazione, cioè lontano dalla causa.
+- **Decisione**: appiattirle in `kb_loader.py`, unendole con la virgola, così che un
+  `KbDocument` sia **già** pronto per il vector store. Il caricatore garantisce l'invariante,
+  invece di lasciarla al chiamante.
+- **Alternative scartate**: convertire in `build_index` (la stessa conversione andrebbe ripetuta
+  in ogni altro consumatore); serializzare in JSON (illeggibile in un filtro Chroma).
+- **Conseguenze**: i metadati dei chunk sono tutti stringhe, verificato da test. Un filtro per
+  stagione dovrà usare una sottostringa, non un confronto esatto.
+
+## ADR-040 — Soglie di retrieval calibrate: 0.813 e 0.864
+
+- **Contesto**: CLAUDE.md avverte che gli score di e5 si concentrano in una fascia alta e
+  stretta e vanno calibrati empiricamente. Misurato con `scripts/probe_retrieval.py` su 12 query
+  pertinenti e 8 fuori tema, tutte formulate **senza riusare le frasi dei documenti** — usare le
+  parole del documento gonfierebbe gli score e calibrerebbe su una situazione irreale.
+- **Risultati**: **hit@1 = 12/12, hit@4 = 12/12**, contro un obiettivo di fase 2 di hit@4 ≥ 90%.
+
+  | Gruppo | min | media | mediana | max |
+  |---|---|---|---|---|
+  | Pertinenti | 0.8195 | 0.8626 | 0.8638 | 0.8873 |
+  | Fuori tema | 0.7346 | 0.7844 | 0.7967 | 0.8063 |
+
+- **Decisione**: `LOW = 0.813` (punto medio fra i due gruppi, massimo margine per lato) e
+  `HIGH = 0.864` (mediana dei pertinenti: circa metà dei recuperi validi può dichiarare
+  confidence alta). Promosse a **default in `config.py`**, così il sistema funziona senza
+  che nessuno debba tarare il `.env`.
+- **L'avvertimento di CLAUDE.md è confermato, e in forma severa**: la separazione è di appena
+  **+0.0132** (peggior pertinente 0.8195, miglior fuori tema 0.8063). Con soglia a 0.813 restano
+  circa 0.0065 di margine per lato, stimati su sole 20 query.
+- **Conseguenza architetturale**: la soglia **non è un confine affidabile** e non va trattata
+  come tale. È uno dei tre presidi contro le risposte fuori ambito, insieme al rifiuto esplicito
+  istruito nel system prompt (SPEC §8) e al cap sulla `confidence`, che rende comunque
+  dichiaratamente incerta una risposta basata su un recupero borderline. La fase 7 rivaluta le
+  soglie su 20 conversazioni indipendenti da queste query.
+- **Nota sul comportamento del retrieval**: il motore restituisce **sempre** qualcosa. Alla
+  domanda «qual è la capitale del Giappone?» risponde con la guida alla concimazione, a 0.7433.
+  È la soglia, non il motore, a dover dichiarare che nessun documento è pertinente.
+- Tabelle complete in `docs/retrieval_calibration.md`.
+
+## ADR-041 — Prefissi e5: l'avvertimento era sovrastimato, si mantengono comunque
+
+- **Contesto**: ADR-022 aveva misurato i prefissi `query: `/`passage: ` su 4 documenti
+  giocattolo, trovando un effetto marginale, e si era impegnato a **rimisurarli** sulla
+  knowledge base reale, dove i distrattori sono altri testi di giardinaggio anziché domande
+  sulla capitale del Giappone. Impegno mantenuto.
+- **Misura** (37 documenti, 207 chunk, stesse 20 query della calibrazione):
+
+  | | hit@1 | hit@4 | Peggior pertinente | Miglior fuori tema | Separazione |
+  |---|---|---|---|---|---|
+  | **Con** prefissi | **12/12** | 12/12 | 0.8195 | 0.8063 | **+0.0132** |
+  | **Senza** prefissi | 11/12 | 12/12 | 0.8268 | 0.8139 | +0.0130 |
+
+- **Esito**: i prefissi recuperano una query in prima posizione e lasciano la separazione
+  praticamente identica. **Il «crollo silenzioso» descritto da CLAUDE.md non si verifica** su
+  questo corpus, né sul campione giocattolo della fase 0.
+- **Decisione**: mantenerli. Sono l'uso documentato del modello, non costano nulla e il
+  miglioramento su hit@1 è reale, per quanto piccolo. Sono applicati dentro `E5Embeddings`, così
+  nessun chiamante può dimenticarli.
+- **Conseguenze**: l'avvertimento resta utile come promemoria ma va ridimensionato nella
+  relazione, con i numeri. Vale la lezione generale: un'insidia nota va misurata sul proprio
+  corpus prima di essere trattata come critica.
+
+## ADR-042 — Chunking guidato dagli heading, non dalla dimensione
+
+- **Contesto**: SPEC §6 prescriveva `MarkdownHeaderTextSplitter` con ricaduta su
+  `RecursiveCharacterTextSplitter` oltre ~1200 caratteri.
+- **Esito misurato**: 37 documenti producono **207 chunk**, circa 5,6 per documento, e su un
+  documento di esempio a tre heading la suddivisione produce esattamente tre chunk, uno per
+  sezione, senza ricadute sul taglio a caratteri.
+- **Prefisso di contesto**: ogni chunk è preceduto da titolo del documento e percorso degli
+  heading (`Guida di esempio — Titolo principale > Dosaggi`). Senza, un chunk che riporta
+  «Dose: 30 g/m²» non dice di quale prodotto parli, e con quattro fertilizzanti a catalogo
+  l'ambiguità sarebbe concreta.
+- **Id deterministici**: `chunk_id = "<doc_id>#<indice>"`, usati come id in Chroma. Una
+  ricostruzione dell'indice **sovrascrive** invece di duplicare, il che rende `make index`
+  idempotente.
+- **Conseguenze**: coperto da test che non caricano il modello di embedding — il chunking è
+  logica pura e va testato come tale, senza scaricare 1,1 GB in CI.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
