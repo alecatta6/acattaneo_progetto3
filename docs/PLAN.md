@@ -93,7 +93,7 @@ DoD:
 
 ---
 
-## [ ] Fase 4 — Agente ReAct
+## [x] Fase 4 — Agente ReAct ✅ completata
 
 **Obiettivo**: loop ReAct funzionante con orchestrazione multi-tool.
 

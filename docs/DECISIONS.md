@@ -890,4 +890,65 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Conseguenze**: il prompt resta una funzione pura testabile senza agente, e il costo è un
   `format()` per chiamata.
 
+## ADR-052 — Struttura del system prompt e criteri di escalation generati dall'enum
+
+- **Contesto**: il system prompt è l'unico punto in cui si governa il comportamento
+  dell'agente. Le sette sezioni di SPEC §8 dicono *cosa* deve contenere, non come organizzarlo.
+- **Struttura scelta**, in quest'ordine: ruolo e tono → data di oggi → provenienza delle
+  informazioni → come affrontare una richiesta → quando chiedere invece di agire → quando
+  passare a un operatore → come scrivere la risposta → campi strutturati. L'ordine non è
+  casuale: le regole di grounding vengono **prima** delle istruzioni operative, perché sono
+  quelle che non ammettono eccezioni, e i campi strutturati per ultimi perché riguardano la
+  forma, non la sostanza.
+- **I criteri di escalation non sono scritti a mano nel prompt.** Sono generati da
+  `ESCALATION_CRITERIA`, un dizionario le cui chiavi sono i valori del `Literal`
+  `EscalationReason` che il tool accetta. Un test asserisce che i due insiemi coincidano:
+  `set(ESCALATION_CRITERIA) == set(typing.get_args(EscalationReason))`.
+- **Perché conta**: un criterio presente nell'enum ma assente dal prompt sarebbe
+  **irraggiungibile** — il modello non saprebbe di poterlo usare — e nessun test di
+  integrazione lo scoprirebbe se non per caso, perché testerebbe solo i criteri che conosce.
+  È la stessa logica di ADR-006 sui `doc_id`: una sola fonte, mai due copie da allineare a mano.
+- **Due regole scritte per esteso**, perché non deducibili dai nomi dell'enum e derivanti da
+  decisioni prese in ADR: una domanda fuori ambito è un rifiuto cortese e **non** un ticket
+  (SPEC §8); un ordine non trovato al primo tentativo chiede conferma e **non** escala
+  (ADR-011).
+- **Vincolo di dimensione**: un test impone 400–1000 parole. Ogni turno paga il prompt in
+  token, e un'istruzione che il modello non legge è peggio di un'istruzione assente. La
+  versione attuale è di 722 parole.
+- **Istruzioni sui campi strutturati**: il prompt specifica che `cited_sources` deve riportare
+  i `doc_id` «nella forma esatta in cui compaiono fra parentesi quadre». Senza questa
+  precisazione, il modello scriverebbe riferimenti in forma libera, l'intersezione di ADR-002
+  restituirebbe sempre l'insieme vuoto, e `sources` cadrebbe silenziosamente sul fallback.
+
+## ADR-053 — Prime osservazioni dall'agente reale, da portare in fase 7
+
+- **Contesto**: i dieci test di integrazione della fase 4 sono le prime esecuzioni con un
+  modello vero. Due osservazioni meritano di essere registrate ora, prima che vengano
+  dimenticate.
+- **Le chiamate ai tool avvengono in parallelo.** Sull'esempio della traccia il modello emette
+  `get_order_status` e `search_knowledge_base` in **un solo** `AIMessage`, quindi il turno
+  costa 2 chiamate al modello invece di 3:
+
+  ```
+  [1] AIMessage -> ['get_order_status', 'search_knowledge_base']
+  [2] ToolMessage (get_order_status)
+  [3] ToolMessage (search_knowledge_base)
+  [4] AIMessage
+  ```
+
+  Conferma con ancora più margine che il limite di 8 (ADR-012, ADR-050) è abbondante.
+  Conseguenza per la metrica `tool_selection_accuracy` della fase 7: i tool vanno raccolti da
+  **tutti** i `tool_calls` di **tutti** gli `AIMessage`, non dall'ultimo.
+- **Una risposta corretta ma non diretta.** Alla domanda «posso piantare **adesso** i bulbi di
+  tulipano?», con business date 12 ottobre, l'agente risponde «può iniziare a piantarli da metà
+  ottobre in poi, non prima». È corretto — la guida dice «da metà ottobre a fine novembre» — ed
+  è prudente sul confine della finestra, ma non risponde con il sì che il cliente cerca.
+- **Decisione: non si tocca il prompt adesso.** La fase 7 è la sede prevista per gli interventi
+  correttivi, e ha il confronto prima/dopo che li rende verificabili. Modificare il prompt ora,
+  su una singola osservazione qualitativa e senza metrica, è il modo classico di peggiorare
+  credendo di migliorare — lo stesso errore contro cui ADR-046 mette in guardia a proposito
+  della scelta della metrica.
+- **Come usarla in fase 7**: se `AnswerRelevancy` o il giudizio sui casi `agronomic_advice`
+  risulteranno bassi, questa è la prima ipotesi da verificare, ed è già formulata.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
