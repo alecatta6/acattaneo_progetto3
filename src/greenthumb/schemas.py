@@ -128,3 +128,19 @@ class AgentOutput(BaseModel):
             "intersecati con cio' che il retrieval ha davvero restituito."
         )
     )
+
+
+class ChatResponse(BaseModel):
+    """The contract the API returns, exactly the four fields of the assignment.
+
+    Only ``answer`` comes from the model. The other three are computed from what actually
+    happened during the turn: which documents retrieval really returned, whether the
+    session holds an escalation ticket, and how good the retrieval scores were (ADR-002).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    answer: str
+    confidence: Confidence
+    sources: list[str]
+    needs_human: bool
