@@ -163,3 +163,38 @@ def test_summary_is_found_wherever_it_sits(position: int) -> None:
     messages: list = [HumanMessage(content="a"), AIMessage(content="b")]
     messages.insert(position, _summary_message("Ordine 1042.", with_marker=True))
     assert summarization_occurred(messages) is True
+
+
+# --- the checkpointer -----------------------------------------------------------------
+
+
+def test_checkpointer_declares_the_serialised_types() -> None:
+    """Deserialising an undeclared type is deprecated and will be blocked (ADR-054)."""
+    from greenthumb.memory import CHECKPOINT_ALLOWED_MODULES, build_checkpointer
+
+    assert ("greenthumb.schemas", "AgentOutput") in CHECKPOINT_ALLOWED_MODULES
+    assert build_checkpointer() is not None
+
+
+def test_structured_output_survives_a_checkpoint_round_trip() -> None:
+    """A blocked type would break multi-turn conversations, not merely warn."""
+    from greenthumb.memory import build_checkpointer
+    from greenthumb.schemas import AgentOutput
+
+    serde = build_checkpointer().serde
+    original = AgentOutput(
+        answer="Il suo ordine arriva domani.",
+        proposed_confidence="high",
+        cited_sources=["guides/bulbi_autunnali.md"],
+    )
+    restored = serde.loads_typed(serde.dumps_typed(original))
+    assert isinstance(restored, AgentOutput)
+    assert restored == original
+
+
+def test_allowlist_is_not_permissive() -> None:
+    """The default accepts any type at all; declaring ours is also the safer posture."""
+    from greenthumb.memory import CHECKPOINT_ALLOWED_MODULES
+
+    assert CHECKPOINT_ALLOWED_MODULES is not True
+    assert len(CHECKPOINT_ALLOWED_MODULES) >= 1

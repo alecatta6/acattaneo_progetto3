@@ -28,12 +28,12 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool
 from langchain_litellm import ChatLiteLLM
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph.state import CompiledStateGraph
 
 from greenthumb.clock import Clock
 from greenthumb.config import Settings, get_settings
 from greenthumb.escalations_repository import EscalationsRepository
+from greenthumb.memory import build_checkpointer
 from greenthumb.orders_repository import OrdersRepository
 from greenthumb.prompts import build_system_prompt
 from greenthumb.retrieval import open_index
@@ -180,7 +180,7 @@ def build_agent(
         tools=list(tools),
         middleware=middleware,
         response_format=AgentOutput,
-        checkpointer=checkpointer if checkpointer is not None else InMemorySaver(),
+        checkpointer=checkpointer if checkpointer is not None else build_checkpointer(),
         name=AGENT_NAME,
     )
 

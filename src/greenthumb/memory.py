@@ -15,6 +15,11 @@ not cosmetic.
 flag in the agent state: it replaces the message list with a ``HumanMessage`` carrying the
 summary. That message is identifiable by the ``lc_source`` marker the middleware sets on it,
 which is what :func:`find_summary` looks for.
+
+The checkpointer here is not the default one either, because the structured response is
+stored in the checkpoint and deserialising it raises a deprecation that says it "will be
+blocked in a future version" — a warning today, a broken multi-turn conversation whenever
+that version lands (ADR-054).
 """
 
 from __future__ import annotations
@@ -24,6 +29,8 @@ from collections.abc import Sequence
 from langchain.agents.middleware import SummarizationMiddleware
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 from greenthumb.config import Settings
 from greenthumb.prompts import SUMMARY_PROMPT
@@ -96,3 +103,25 @@ def summarization_occurred(messages: Sequence[BaseMessage]) -> bool:
         True when a summary is present.
     """
     return find_summary(messages) is not None
+
+
+# Modules whose types are stored in checkpoints. The agent's structured response is one of
+# them, and deserialising an unregistered type is deprecated: permissive today, blocked in a
+# future release. Declaring it keeps multi-turn conversations working across upgrades, and
+# is the safer posture anyway, since the permissive mode accepts any type at all (ADR-054).
+CHECKPOINT_ALLOWED_MODULES = {("greenthumb.schemas", "AgentOutput")}
+
+
+def build_checkpointer() -> InMemorySaver:
+    """Build the conversation store with our serialised types declared.
+
+    Sessions live in memory only: they are lost when the process restarts, which is a known
+    limit rather than an oversight (SPEC section 9). Production would use a persistent
+    checkpointer, and the swap is a single argument.
+
+    Returns:
+        The checkpointer, keyed by ``thread_id`` and therefore by session.
+    """
+    return InMemorySaver(
+        serde=JsonPlusSerializer(allowed_msgpack_modules=CHECKPOINT_ALLOWED_MODULES)
+    )
