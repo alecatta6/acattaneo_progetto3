@@ -31,8 +31,9 @@ pytestmark = pytest.mark.llm
 
 BUSINESS_DATE = dt.date(2026, 10, 12)
 
-# Low enough that four short turns cross it; the production value is 2500.
-TEST_TRIGGER_TOKENS = 500
+# Low enough that a few short turns cross it; the production value is 8000. Applied with
+# model_copy, which does not re-run the validator that refuses this value in production.
+TEST_TRIGGER_TOKENS = 3500
 TEST_KEEP_MESSAGES = 4
 
 # Each turn introduces something that has to survive the summary.

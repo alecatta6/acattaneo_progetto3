@@ -111,7 +111,7 @@ DoD:
 
 ---
 
-## [ ] Fase 5 — Memoria a breve termine
+## [x] Fase 5 — Memoria a breve termine ✅ completata
 
 **Obiettivo**: conversazioni multi-turn con summarization verificata.
 

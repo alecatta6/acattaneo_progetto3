@@ -116,9 +116,14 @@ def test_prompt_asks_for_multi_tool_decomposition() -> None:
 
 
 def test_prompt_requires_asking_when_the_order_number_is_missing() -> None:
-    """SPEC 8, point 5: ask before acting on an ambiguous request."""
+    """SPEC 8, point 5: ask before acting on an ambiguous request.
+
+    The condition is scoped to the whole conversation, not to the last message, which is
+    the distinction the agent got wrong before ADR-057.
+    """
     flat = " ".join(build_system_prompt(AUTUMN).split())
-    assert "senza dare il numero" in flat
+    assert 'se il cliente parla del "suo ordine"' in flat
+    assert "chiediglielo" in flat
 
 
 # --- output discipline ----------------------------------------------------------------
@@ -150,3 +155,15 @@ def test_prompt_stays_within_a_reasonable_size() -> None:
     """Every turn pays for the prompt, and an unread instruction is worse than none."""
     words = len(build_system_prompt(AUTUMN).split())
     assert 400 <= words <= 1000, f"{words} parole"
+
+
+def test_prompt_treats_the_summary_as_knowledge() -> None:
+    """Memory is useless if the model refuses to read it (ADR-057).
+
+    Observed: with the order number present in the summary, the agent still answered
+    "non ho accesso ai suoi ordini senza che me li fornisca", applying the clarification
+    rule to the last message instead of to the conversation.
+    """
+    flat = " ".join(build_system_prompt(AUTUMN).split())
+    assert "riassunto dei turni precedenti" in flat
+    assert "non compare da nessuna parte nella conversazione" in flat

@@ -28,11 +28,12 @@ from greenthumb.orders_repository import OrdersRepository
 from greenthumb.retrieval import open_index
 
 WIDTH = 96
-# The trigger must sit comfortably ABOVE the token size of what is retained, or the
-# middleware summarises again on the very next model call and keeps doing so, paying for an
-# extra LLM call each time. Measured on this knowledge base: four retained messages run to
-# roughly 700-1000 tokens, dominated by the retrieved chunks in the ToolMessages (ADR-055).
-DEMO_TRIGGER_TOKENS = 1500
+# Lowered from the production 8000 so the threshold is crossed within a few turns, but not
+# so far that summarization runs before every call: the trigger is compared against the
+# provider's reported request total, which starts around 2583 and grows by roughly a
+# thousand tokens per turn (ADR-056). Applied with model_copy, which by design does not
+# re-run the validator that would refuse this value in production.
+DEMO_TRIGGER_TOKENS = 3500
 DEMO_KEEP_MESSAGES = 4
 
 CONVERSATION = (

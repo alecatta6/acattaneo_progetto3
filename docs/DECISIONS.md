@@ -951,4 +951,100 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Come usarla in fase 7**: se `AnswerRelevancy` o il giudizio sui casi `agronomic_advice`
   risulteranno bassi, questa è la prima ipotesi da verificare, ed è già formulata.
 
+## ADR-054 — Il checkpointer dichiara i tipi che serializza
+
+- **Contesto**: eseguendo la prima conversazione multi-turno è comparso un avviso di
+  `langgraph`: «Deserializing unregistered type `greenthumb.schemas.AgentOutput` from
+  checkpoint. **This will be blocked in a future version**».
+- **Perché non è rumore**: l'output strutturato viene salvato nel checkpoint a ogni turno.
+  Quando quella versione arriverà, le conversazioni multi-turno smetteranno di funzionare — e
+  il notebook consegnato oggi verrà eseguito mesi dopo, su un runtime Colab che installa le
+  versioni del momento.
+- **Decisione**: `build_checkpointer()` costruisce l'`InMemorySaver` con un
+  `JsonPlusSerializer(allowed_msgpack_modules={("greenthumb.schemas", "AgentOutput")})`.
+  Effetto secondario desiderabile: si esce dalla modalità permissiva, che accetta in
+  deserializzazione **qualunque** tipo.
+- **Dettaglio che è costato un giro**: l'allowlist vuole la coppia `(modulo, classe)`, non le
+  parti del percorso del modulo. Il primo tentativo con `("greenthumb", "schemas")` ha
+  trasformato l'avviso in un **blocco effettivo** — il che, almeno, ha reso l'errore
+  immediatamente visibile invece di lasciarlo latente.
+- **Conseguenze**: tre test di regressione, incluso un round-trip completo di `AgentOutput`
+  attraverso il serializzatore.
+
+## ADR-055 — Log dello scatto della summarization, con i numeri che l'hanno deciso
+
+- **Contesto**: il middleware non lascia alcun segnale di aver riassunto: sostituisce la lista
+  dei messaggi e basta. Il PLAN chiedeva di loggare lo scatto per la demo del notebook.
+- **Decisione**: `LoggingSummarizationMiddleware` sottoclassa il middleware e sovrascrive
+  `before_model`, che è **pubblico** e restituisce un dizionario esattamente quando ha
+  riassunto, `None` altrimenti. Nessun aggancio a interni privati.
+- **La riga di log riporta i token, non solo i messaggi**, ed è questa scelta ad aver reso
+  visibile ADR-056: la prima esecuzione stampava «5 messaggi (387 token)» contro una soglia di
+  1500, e quel numero incoerente era l'unico indizio disponibile. Un log che avesse riportato
+  solo il conteggio dei messaggi non avrebbe detto nulla.
+- **Conseguenze**: `scripts/demo_memory.py` usa lo stesso log per la demo del notebook.
+
+## ADR-056 — La soglia di summarization si confronta col totale riportato dal provider
+
+- **Contesto**: SPEC §9 fissava il trigger a 2500 token, intendendo implicitamente i token
+  della conversazione.
+- **Scoperta**: `_should_summarize` scatta se **una qualsiasi** delle due condizioni è vera:
+  i token della lista messaggi, **oppure** il `total_tokens` che il provider riporta
+  nell'ultima risposta — e quel totale comprende **system prompt e schemi dei tre tool**, non
+  solo la conversazione.
+- **Misura** (nessuna summarization attiva, per osservare la crescita reale):
+
+  | Turno | Messaggi | `total_tokens` riportati per chiamata |
+  |---|---|---|
+  | 1 | 4 | **2583**, 2814 |
+  | 2 | 8 | 2867, 3816 |
+  | 3 | 12 | 3863, 4758 |
+  | 4 | 16 | 4794, 5486 |
+
+- **Conseguenza del valore originale**: con 2500, **la primissima chiamata supera già la
+  soglia**. La summarization sarebbe scattata prima di ogni singola chiamata al modello, dal
+  primo turno: una chiamata LLM aggiuntiva ogni volta, e conversazioni di due battute
+  compattate senza alcuna ragione.
+- **Perché nessun test lo avrebbe rilevato**: i test di memoria sarebbero stati *più* verdi,
+  non meno, perché la summarization scatta sempre. Il sintomo sarebbe arrivato dalla bolletta.
+- **Decisione**: trigger a **8000** token. Con un pavimento di ~2583 e una crescita di circa
+  1000 token per turno, la summarization scatta attorno al sesto turno: una conversazione
+  lunga per il customer care, senza compattare quelle brevi.
+- **Guardia**: un validatore rifiuta valori sotto 3000, citando il pavimento misurato e
+  spiegando cosa accadrebbe. Stessa logica di ADR-043: un valore che rende patologico un
+  meccanismo non deve essere un valore ammissibile. Verso l'alto resta libero.
+- **Alternative scartate**: trigger sui messaggi (deterministico e immune al problema, ma devia
+  da SPEC §9 che parla di token); frazione della finestra di contesto (si adatta al modello, ma
+  dipende dal fatto che LiteLLM esponga il limite attraverso OpenRouter, e rende la soglia
+  illeggibile nella relazione); tenere 2500 dichiarandolo deliberato (nessun beneficio).
+- **Nota per la fase 7**: le conversazioni `memory` del dataset devono superare gli 8000 token
+  riportati, cioè contare almeno sei turni, altrimenti testeranno una summarization che non è
+  mai scattata — l'errore di ADR-028, in una forma nuova.
+
+## ADR-057 — La memoria non serve se il prompt non la considera conoscenza
+
+- **Contesto**: con il trigger corretto, il test di memoria è diventato rosso su una cosa che
+  la fase precedente non aveva mostrato. Il riassunto **conteneva** «Ordine 1042» ed era in
+  contesto, eppure alla domanda «mi ricorda qual era il numero del mio ordine?» l'agente
+  rispondeva: «non ho accesso diretto ai dati personali o agli ordini senza che lei me li
+  fornisca».
+- **Diagnosi**: non è un difetto della memoria, è il system prompt. La regola di SPEC §8 punto
+  5 — «se il cliente parla del suo ordine senza dare il numero, chiediglielo» — veniva applicata
+  all'**ultimo messaggio** invece che alla conversazione, e la regola di grounding «non
+  inventare mai numeri d'ordine» faceva il resto, spingendo il modello a trattare un dato già
+  fornito dal cliente come un'invenzione da evitare.
+- **Decisione**: nuova sezione «Cosa sai già» nel prompt, che dichiara la storia della
+  conversazione — **riassunto incluso** — parte di ciò che l'agente sa, e precisa che
+  riprendere un numero d'ordine già fornito non è inventare. La regola di chiarimento è stata
+  riscritta con la condizione giusta: chiedere solo se il numero «non compare da nessuna parte
+  nella conversazione».
+- **Perché questa modifica al prompt si fa ora e quella di ADR-053 no**: qui c'era un test
+  rosso che asserisce un requisito della Definition of Done della fase, e la modifica lo fa
+  passare in modo verificabile. In ADR-053 c'era una singola osservazione qualitativa senza
+  metrica, e la sede giusta resta la fase 7.
+- **Conseguenze**: sette test di memoria con LLM reale verdi, compresa la sopravvivenza del
+  numero d'ordine del primo turno. Lezione generale per la relazione: **un meccanismo di
+  memoria può funzionare perfettamente e non servire a nulla**, se le istruzioni dell'agente
+  non gli dicono che quella memoria è conoscenza legittima.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->

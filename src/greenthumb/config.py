@@ -22,6 +22,12 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 DEFAULT_BUSINESS_DATE = dt.date(2026, 10, 12)
 
+# Measured in phase 5: the first model call of a conversation already reports this many
+# tokens, because the request carries the system prompt and the three tool schemas. The
+# summarization trigger is compared against that figure, so it has to clear it (ADR-056).
+MEASURED_REQUEST_FLOOR_TOKENS = 2583
+MIN_SUMMARY_TRIGGER_TOKENS = 3000
+
 
 class MissingEvalModelError(RuntimeError):
     """Raised when the evaluation is started without a judge model configured."""
@@ -83,8 +89,18 @@ class Settings(BaseSettings):
     )
 
     # --- Short-term memory (ADR-004) ---
-    summary_trigger_tokens: int = Field(default=2500, ge=200)
-    summary_keep_messages: int = Field(default=6, ge=2)
+    # Calibrated in phase 5 against what the provider actually reports (ADR-056). The
+    # trigger is compared against the reported total_tokens of the whole request, system
+    # prompt and tool schemas included, not against the conversation alone.
+    summary_trigger_tokens: int = Field(
+        default=8000,
+        le=200_000,
+        description=(
+            "Reported request tokens above which the conversation is summarised. Must stay "
+            "above the measured floor, or summarization fires on every single call."
+        ),
+    )
+    summary_keep_messages: int = Field(default=6, ge=2, le=50)
 
     # --- Agent ---
     agent_max_iterations: int = Field(default=8, ge=1, le=30)
@@ -123,6 +139,38 @@ class Settings(BaseSettings):
                 "come rilevante, disattivando il filtro. Il valore calibrato e' 0.813: "
                 "vedi docs/retrieval_calibration.md. Rimuovi la riga dal .env per usare "
                 "il default, oppure impostala al valore calibrato."
+            )
+        return value
+
+    @field_validator("summary_trigger_tokens")
+    @classmethod
+    def _trigger_is_above_the_measured_floor(cls, value: int) -> int:
+        """Reject a summarization trigger that would fire on every call.
+
+        The middleware compares the threshold against the provider-reported total_tokens of
+        the last reply, which covers the system prompt and the three tool schemas as well as
+        the conversation. Measured on this project, the very first call of a conversation
+        already reports 2583 tokens, so a threshold anywhere near SPEC's original 2500 makes
+        summarization run before every model call: an extra LLM call each time, and short
+        conversations compacted for no reason (ADR-056).
+
+        Args:
+            value: The candidate trigger.
+
+        Returns:
+            The validated trigger.
+
+        Raises:
+            ValueError: If the trigger sits at or below the measured floor.
+        """
+        if value < MIN_SUMMARY_TRIGGER_TOKENS:
+            raise ValueError(
+                f"GREENTHUMB_SUMMARY_TRIGGER_TOKENS={value} e' sotto il pavimento misurato: "
+                f"la prima chiamata di una conversazione riporta gia' circa "
+                f"{MEASURED_REQUEST_FLOOR_TOKENS} token, perche' la soglia si confronta con "
+                "il totale riportato dal provider, system prompt e schemi dei tool inclusi. "
+                f"Sotto {MIN_SUMMARY_TRIGGER_TOKENS} la summarization scatterebbe a ogni "
+                "chiamata. Il valore calibrato e' 8000: vedi ADR-056."
             )
         return value
 

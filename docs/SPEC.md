@@ -317,8 +317,12 @@ usarlo), input Pydantic, output strutturato, casi limite gestiti senza eccezioni
 
 - **Strategia: summarization** (non trimming), tramite il middleware di summarization di
   LangChain 1.x (verificare nome e parametri sulla versione installata).
-- Parametri iniziali: trigger oltre ~2500 token di conversazione, ultimi 6 messaggi mantenuti
-  integri. Da validare con i test di memoria dell'evaluation.
+- Parametri calibrati in fase 5 (ADR-056): trigger a **8000 token**, ultimi 6 messaggi
+  mantenuti integri. Attenzione: la soglia si confronta con il `total_tokens` che il provider
+  riporta per l'intera richiesta, **system prompt e schemi dei tool inclusi**, non con i soli
+  token della conversazione. Il pavimento misurato e' ~2583 token alla prima chiamata, quindi
+  il valore inizialmente previsto (2500) avrebbe fatto scattare la summarization a ogni
+  chiamata. Un validatore in `config.py` rifiuta valori sotto 3000.
 - Prompt di summarization personalizzato che **deve** preservare: numeri d'ordine citati,
   prodotti/SKU discussi, escalation aperte con ticket_id, preferenze o vincoli espressi dal
   cliente (es. "coltivo sul balcone").

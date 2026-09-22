@@ -76,7 +76,7 @@ def test_summary_prompt_is_not_the_stock_coding_agent_one() -> None:
 
 def test_middleware_uses_the_configured_thresholds() -> None:
     """Trigger and retention are configuration, not constants buried in code."""
-    settings = _settings(summary_trigger_tokens=1234, summary_keep_messages=4)
+    settings = _settings(summary_trigger_tokens=9000, summary_keep_messages=4)
     middleware = build_summarization_middleware(_model(), settings)
     assert middleware is not None
 
