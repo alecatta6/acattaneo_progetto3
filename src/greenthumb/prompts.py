@@ -1,4 +1,4 @@
-"""System prompt for the customer care agent.
+"""Prompts for the customer care agent: the system prompt and the summarization prompt.
 
 The prompt is built per invocation rather than fixed at construction time, because the
 business date and the current season are part of it (SPEC section 8, point 2). Phase 0
@@ -181,3 +181,32 @@ def build_system_prompt(today: dt.date) -> str:
         season=season_of(today),
         escalation_criteria=format_escalation_criteria(),
     )
+
+
+# The middleware's stock prompt is written for a coding agent, with sections named SESSION
+# INTENT, ARTIFACTS and NEXT STEPS. Applied to customer care it would summarise away exactly
+# what has to survive: the order number quoted in turn one, and the constraint the customer
+# mentioned in passing. The replacement below is not decoration (ADR-028).
+SUMMARY_PROMPT = """\
+Riassumi la conversazione fra un cliente e l'assistente di GreenThumb.
+
+Il riassunto **sostituira'** i messaggi originali: cio' che non scrivi qui viene perso per
+il resto della conversazione. Conserva quindi obbligatoriamente, se presenti:
+
+- ogni **numero d'ordine** citato, anche di sfuggita;
+- ogni **prodotto o SKU** discusso;
+- le **escalation aperte**, con il loro ticket_id e il motivo;
+- le **preferenze e i vincoli** espressi dal cliente: dove coltiva, quanto sole ha, se e'
+  alle prime armi, eventuali allergie o animali in casa;
+- le **domande rimaste senza risposta**;
+- gli **impegni presi** dall'assistente verso il cliente.
+
+Non conservare invece le formule di cortesia, le riformulazioni della stessa domanda e i
+dettagli gia' risolti che non hanno seguito.
+
+Scrivi in italiano, in forma sintetica e impersonale, per punti. Rispondi SOLO con il
+riassunto, senza premesse.
+
+<messages>
+{messages}
+</messages>"""
