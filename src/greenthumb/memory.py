@@ -24,7 +24,9 @@ that version lands (ADR-054).
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
+from typing import Any
 
 from langchain.agents.middleware import SummarizationMiddleware
 from langchain_core.language_models import BaseChatModel
@@ -34,6 +36,8 @@ from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 from greenthumb.config import Settings
 from greenthumb.prompts import SUMMARY_PROMPT
+
+logger = logging.getLogger(__name__)
 
 # Set by the middleware on the message it injects. Structured metadata, and therefore a far
 # better handle than the English sentence the library hardcodes in front of the summary.
@@ -45,9 +49,50 @@ SUMMARY_SOURCE_MARKER = "summarization"
 SUMMARY_TEXT_PREFIX = "Here is a summary of the conversation to date:"
 
 
+class LoggingSummarizationMiddleware(SummarizationMiddleware):
+    """Summarization middleware that announces when it fires.
+
+    The library leaves no signal that a summary was produced: it simply replaces the
+    message list. Knowing the moment it happens is useful for the notebook demo and for
+    reading a trace afterwards, and ``before_model`` is the public hook that returns a
+    dictionary exactly when it summarised and ``None`` otherwise.
+    """
+
+    def before_model(self, state: Any, runtime: Any) -> dict[str, Any] | None:
+        """Summarise if the threshold is crossed, and log it when it happens.
+
+        Args:
+            state: The agent state.
+            runtime: The LangGraph runtime.
+
+        Returns:
+            The state update when a summary was produced, otherwise None.
+        """
+        incoming = state.get("messages", []) or []
+        result = super().before_model(state, runtime)
+        if result is None:
+            return result
+
+        # The update is [RemoveMessage(REMOVE_ALL), summary, *preserved], so the two leading
+        # entries are not conversation messages and must not be counted.
+        updated = result.get("messages", []) or []
+        preserved = updated[2:]
+        tokens_before = self.token_counter(incoming)
+        tokens_after = self.token_counter(updated[1:])
+        logger.info(
+            "Summarization scattata: %d messaggi (%d token) -> 1 riassunto + %d conservati "
+            "(%d token).",
+            len(incoming),
+            tokens_before,
+            len(preserved),
+            tokens_after,
+        )
+        return result
+
+
 def build_summarization_middleware(
     model: BaseChatModel, settings: Settings
-) -> SummarizationMiddleware:
+) -> LoggingSummarizationMiddleware:
     """Build the summarization middleware from configuration.
 
     Args:
@@ -58,7 +103,7 @@ def build_summarization_middleware(
     Returns:
         The configured middleware, ready to pass to ``build_agent``.
     """
-    return SummarizationMiddleware(
+    return LoggingSummarizationMiddleware(
         model=model,
         # Tuples, not integers: the API takes a (unit, amount) pair (ADR-028).
         trigger=("tokens", settings.summary_trigger_tokens),
