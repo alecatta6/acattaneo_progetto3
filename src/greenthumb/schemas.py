@@ -3,6 +3,11 @@
 The order models mirror the structure written by ``scripts/generate_orders.py`` and fixed
 by SPEC section 4.4. They are strict on purpose: a malformed order file should fail at load
 time, in one place, rather than surfacing as a wrong figure in a customer-facing answer.
+
+:class:`AgentOutput` is what the model is asked to produce. It is deliberately *not* the
+response the API returns: ``sources``, ``needs_human`` and the final ``confidence`` are
+computed from what actually happened during the turn, not from what the model claims
+(ADR-002). The final contract lands in ``response.py``.
 """
 
 from __future__ import annotations
@@ -11,6 +16,8 @@ import datetime as dt
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+Confidence = Literal["high", "medium", "low"]
 
 OrderStatus = Literal[
     "processing",
@@ -95,3 +102,29 @@ class Order(BaseModel):
             True when at least one line is a seed or bulb SKU.
         """
         return any(item.sku.startswith(("GT-SEM-", "GT-BUL-")) for item in self.items)
+
+
+class AgentOutput(BaseModel):
+    """The structured output the agent is asked to produce.
+
+    No field carries a default, on purpose. The provider's strict JSON schema requires every
+    property to appear in ``required``, and an optional field makes the whole request fail
+    with ``Invalid schema for response_format`` (ADR-026). ``cited_sources`` is therefore
+    mandatory, with an empty list when the knowledge base was not used.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    answer: str = Field(description="La risposta per il cliente, in italiano.")
+    proposed_confidence: Confidence = Field(
+        description=(
+            "Quanto il modello ritiene la risposta coperta dalle fonti trovate. Il livello "
+            "finale puo' essere abbassato dal livello deterministico, mai alzato."
+        )
+    )
+    cited_sources: list[str] = Field(
+        description=(
+            "I doc_id dei documenti realmente usati, lista vuota se nessuno. Vengono "
+            "intersecati con cio' che il retrieval ha davvero restituito."
+        )
+    )

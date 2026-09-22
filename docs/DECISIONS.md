@@ -836,4 +836,58 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   serve a completare un'azione già decisa, là servirebbe a decidere, e una decisione va presa
   sulla fonte, non su una copia.
 
+## ADR-049 — Un fake chat model non puo' pilotare questo agente
+
+- **Contesto**: il PLAN prevedeva «test unitari del wiring con fake chat model». Provato per
+  davvero, il fake non regge il ciclo.
+- **Due ostacoli indipendenti**:
+  1. `GenericFakeChatModel.bind_tools` **solleva `NotImplementedError`**: è un metodo astratto
+     della classe base, non implementato da nessuno dei sei fake di `langchain_core`. Un agente
+     con tool non è quindi costruibile sopra un fake senza sottoclassarlo.
+  2. Anche sottoclassandolo per accettare il binding, il ciclo non termina: `create_agent`
+     ottiene l'output strutturato dal **`response_format` nativo del provider** (ADR-026), un
+     protocollo specifico dell'implementazione che il fake non emula. L'agente continua a
+     chiamare il modello fino al limite di iterazioni, esaurendo le risposte preparate.
+- **Decisione**: i test unitari verificano **cosa è stato cablato**, non il comportamento del
+  ciclo: modello con temperatura e tetto di token corretti, tre tool nell'ordine atteso, tutti
+  con `content_and_artifact`, soglia di retrieval effettivamente propagata, checkpointer
+  attaccato, canale `structured_response` esposto, fallback conforme allo schema. Il
+  comportamento del ciclo è coperto dai test marcati `llm`.
+- **Conseguenza per la fase 6**: `response.py` va testato con **trace costruite a mano**, non
+  eseguendo l'agente. Il PLAN lo prevedeva già («trace costruite a mano, nessun LLM»): la
+  scoperta conferma quella scelta invece di contraddirla.
+- **Nota secondaria**: `create_agent` rifiuta due istanze della **stessa classe** di middleware
+  con `AssertionError: Please remove duplicate middleware instances`. Vincolo da ricordare in
+  fase 5, quando si aggiunge la summarization: deve essere di tipo diverso da quelli già cablati,
+  cosa che è.
+
+## ADR-050 — Il limite di iterazioni termina la corsa, non solleva
+
+- **Contesto**: SPEC §8 chiede un limite al ciclo ReAct «con risposta di fallback», non un
+  errore verso il cliente.
+- **Decisione**: `ModelCallLimitMiddleware(run_limit=8, exit_behavior="end")`. Fra le due
+  modalità disponibili, `"error"` solleverebbe un'eccezione a metà conversazione; `"end"` salta
+  alla fine del grafo e lascia che sia `fallback_output()` a fornire la risposta: scuse, rinvio
+  a un operatore, indirizzo di contatto, `proposed_confidence="low"`, nessuna fonte citata.
+- **Perché 8 resta il numero giusto**: ADR-026 ha stabilito che lo structured output è nativo e
+  **non consuma un'iterazione**, quindi il budget è interamente disponibile per il ragionamento
+  e le chiamate ai tool. Un turno multi-tool legittimo ne usa tre o quattro.
+- **Temperature a 0.0, non genericamente «bassa»**: l'evaluation della fase 7 confronta due
+  esecuzioni prima e dopo un intervento correttivo. Con temperatura maggiore di zero, il rumore
+  di campionamento comparirebbe come differenza di punteggio che nessuna nostra modifica ha
+  causato. Resta comunque la variabilità fra fornitori di OpenRouter (ADR-030).
+
+## ADR-051 — Il system prompt viene ricostruito a ogni chiamata al modello
+
+- **Contesto**: `create_agent(system_prompt=...)` accetta una stringa fissa, congelata alla
+  costruzione dell'agente. La data di business e la stagione fanno parte del prompt.
+- **Decisione**: middleware `dynamic_prompt`, che invoca `build_system_prompt(clock.today())`
+  a ogni chiamata al modello. Il clock è iniettato, quindi con `SystemClock` la data segue il
+  tempo reale e con `FrozenClock` resta quella simulata, senza che l'agente debba saperlo.
+- **Alternative scartate**: prompt fisso con la data del momento della costruzione (un processo
+  di lunga durata, o l'API avviata prima di mezzanotte, direbbe al cliente una data sbagliata);
+  iniettare la data nel messaggio utente (la inquina e la rende visibile nella trascrizione).
+- **Conseguenze**: il prompt resta una funzione pura testabile senza agente, e il costo è un
+  `format()` per chiamata.
+
 <!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
