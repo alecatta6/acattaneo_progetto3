@@ -149,7 +149,9 @@ def test_artifact_carries_doc_id_score_and_chunk_id() -> None:
     tool, _ = _tool([("guides/a.md", 2, 0.90)])
     _, artifact = tool.func(query="domanda")
     entry = artifact["results"][0]
-    assert entry == {"doc_id": "guides/a.md", "score": 0.90, "chunk_id": "guides/a.md#2"}
+    assert entry["doc_id"] == "guides/a.md"
+    assert entry["score"] == 0.90
+    assert entry["chunk_id"] == "guides/a.md#2"
 
 
 def test_several_chunks_of_one_document_are_kept_separate() -> None:
@@ -217,3 +219,12 @@ def test_real_index_answers_the_assignment_question() -> None:
 
     _, off_topic = tool.func(query="Qual e' la capitale del Giappone?")
     assert off_topic["results"] == [], "la soglia non sta filtrando le domande fuori tema"
+
+
+def test_artifact_carries_the_chunk_text_for_the_evaluation() -> None:
+    """RAGAS scores faithfulness against the contexts, so they travel structured (ADR-059)."""
+    tool, _ = _tool([("guides/a.md", 0, 0.90)])
+    _, artifact = tool.func(query="domanda")
+    entry = artifact["results"][0]
+    assert "text" in entry
+    assert entry["text"], "il testo del chunk non deve essere vuoto"

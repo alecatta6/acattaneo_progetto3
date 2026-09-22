@@ -130,8 +130,16 @@ def _artifact(
         "doc_type": doc_type,
         "threshold": threshold,
         "best_similarity": max((h.similarity for h in all_hits), default=None),
+        # The chunk text travels in the artifact as well as in the content. It is duplicated
+        # on purpose: RAGAS scores faithfulness against the retrieved contexts themselves,
+        # and re-deriving them by parsing the formatted content would be fragile (ADR-059).
         "results": [
-            {"doc_id": hit.doc_id, "score": hit.similarity, "chunk_id": hit.chunk_id}
+            {
+                "doc_id": hit.doc_id,
+                "score": hit.similarity,
+                "chunk_id": hit.chunk_id,
+                "text": hit.text,
+            }
             for hit in hits
         ],
     }

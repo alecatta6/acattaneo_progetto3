@@ -43,11 +43,13 @@ class RetrievedChunk:
         doc_id: Identifier of the source document, extension included.
         score: Cosine similarity, as computed by ``retrieval.search``.
         chunk_id: Identifier of the chunk within its document.
+        text: The chunk text, which the evaluation scores faithfulness against.
     """
 
     doc_id: str
     score: float
     chunk_id: str
+    text: str = ""
 
 
 @dataclass(frozen=True)
@@ -160,6 +162,7 @@ def extract_turn_evidence(messages: Sequence[BaseMessage]) -> TurnEvidence:
                         doc_id=str(entry["doc_id"]),
                         score=float(entry["score"]),
                         chunk_id=str(entry["chunk_id"]),
+                        text=str(entry.get("text", "")),
                     )
                 )
         elif tool == ORDER_TOOL:

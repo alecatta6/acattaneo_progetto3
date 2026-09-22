@@ -68,6 +68,21 @@ def fallback_output() -> AgentOutput:
     return AgentOutput(answer=FALLBACK_ANSWER, proposed_confidence="low", cited_sources=[])
 
 
+def is_fallback_output(output: AgentOutput) -> bool:
+    """Report whether an output is the fallback rather than a model reply.
+
+    The caller needs this to set the ``X-Fallback`` header (ADR-009), and checking the text
+    is enough because the fallback is a single constant produced in one place.
+
+    Args:
+        output: The output to classify.
+
+    Returns:
+        True when the output is the fallback.
+    """
+    return output.answer == FALLBACK_ANSWER
+
+
 def build_chat_model(settings: Settings) -> ChatLiteLLM:
     """Build the chat model from configuration.
 
@@ -190,6 +205,8 @@ def build_default_agent(
     clock: Clock | None = None,
     checkpointer: BaseCheckpointSaver | None = None,
     extra_middleware: Sequence[AgentMiddleware] = (),
+    model: BaseChatModel | None = None,
+    escalations: EscalationsRepository | None = None,
 ) -> CompiledStateGraph:
     """Build the production agent, wiring every dependency from configuration.
 
@@ -198,6 +215,13 @@ def build_default_agent(
         clock: The business-date source; built from configuration when omitted.
         checkpointer: Conversation store; an in-memory one is created when omitted.
         extra_middleware: Additional middleware, appended after the built-in ones.
+        model: The chat model; built from configuration when omitted. The caller passes one
+            when it also needs it for the summarization middleware, so a single model
+            instance serves both.
+        escalations: The escalation register; built from configuration when omitted. The
+            caller passes one because ``needs_human`` is read from the same register the
+            tool writes to, and two instances agreeing is otherwise a coincidence of
+            configuration rather than a guarantee (ADR-060).
 
     Returns:
         The compiled agent.
@@ -217,11 +241,13 @@ def build_default_agent(
         settings=settings,
         clock=clock,
         orders=OrdersRepository.from_file(settings.orders_path),
-        escalations=EscalationsRepository(settings.escalations_path),
+        escalations=escalations
+        if escalations is not None
+        else EscalationsRepository(settings.escalations_path),
         store=open_index(settings.vector_store_dir, settings.embedding_model),
     )
     return build_agent(
-        model=build_chat_model(settings),
+        model=model if model is not None else build_chat_model(settings),
         tools=tools,
         clock=clock,
         max_iterations=settings.agent_max_iterations,
