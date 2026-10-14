@@ -25,6 +25,7 @@ from greenthumb.config import REPO_ROOT, Settings
 from greenthumb.escalations_repository import EscalationsRepository
 from greenthumb.memory import build_summarization_middleware, find_summary, summarization_occurred
 from greenthumb.orders_repository import OrdersRepository
+from greenthumb.response import messages_of_current_turn
 from greenthumb.retrieval import open_index
 
 pytestmark = pytest.mark.llm
@@ -130,14 +131,31 @@ def test_summarization_fired(conversation: dict[str, Any]) -> None:
     )
 
 
-def test_message_count_stops_growing(conversation: dict[str, Any]) -> None:
-    """Summarization exists to bound the context, so the list must stop expanding.
+def test_the_context_before_the_current_turn_stays_inside_the_keep_window(
+    conversation: dict[str, Any],
+) -> None:
+    """Summarization exists to bound the context, and this is the bound it guarantees.
+
+    Everything older than the turn being answered must fit in the keep window plus the one
+    message the summary occupies. That is the middleware's actual promise, and it holds
+    whatever the model decides to do with the tools.
+
+    The first version compared the total count against ``2 * turns + 2``: a bound expressed
+    in turns, while the quantity measured is messages. It passed for a while and then went
+    red with no code change, on a run where the model used two sequential tool rounds in one
+    turn. A single turn can contribute six messages or more (customer message, a model/tool
+    pair per round, the answer), so that comparison never said anything about summarization.
 
     Args:
         conversation: The shared conversation result.
     """
-    counts = conversation["counts"]
-    assert max(counts) < 2 * len(CONVERSATION) + 2, f"i messaggi crescono senza limite: {counts}"
+    messages = conversation["recall"]["messages"]
+    carried = len(messages) - len(messages_of_current_turn(messages))
+    assert carried <= TEST_KEEP_MESSAGES + 1, (
+        f"la summarization non ha limitato il contesto: {carried} messaggi trascinati oltre "
+        f"il turno corrente, con keep={TEST_KEEP_MESSAGES}; "
+        f"conteggi per turno {conversation['counts']}"
+    )
 
 
 # --- what had to survive --------------------------------------------------------------

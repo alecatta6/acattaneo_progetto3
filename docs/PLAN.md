@@ -127,7 +127,7 @@ DoD:
 
 ---
 
-## [ ] Fase 6 — Structured output e assemblaggio della risposta
+## [x] Fase 6 — Structured output e assemblaggio della risposta ✅ completata
 
 **Obiettivo**: ogni turno restituisce una `ChatResponse` valida con campi deterministici.
 
@@ -140,7 +140,9 @@ Task:
 
 DoD:
 - 100% delle risposte dei test di integrazione valide rispetto allo schema.
-- Una funzione pubblica `chat(message, session_id) -> ChatResponse` usata da API ed evaluation.
+- Una funzione pubblica `chat(message, session_id) -> ChatResponse` usata da API ed evaluation
+  (`ChatService.chat` in `service.py`; `chat_detailed` restituisce in più i contesti recuperati
+  e i tool invocati, che servono all'evaluation e all'header `X-Fallback` dell'API).
 
 ---
 

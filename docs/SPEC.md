@@ -66,7 +66,8 @@ acattaneo_progetto3/
 │   ├── build_index.py
 │   ├── probe_retrieval.py       # calibrazione soglie (fase 2)
 │   ├── ablation_e5_prefixes.py  # ablazione sui prefissi e5 (ADR-046)
-│   └── demo_tools.py            # demo dei tre tool, senza LLM (fase 3)
+│   ├── demo_tools.py            # demo dei tre tool, senza LLM (fase 3)
+│   └── demo_memory.py           # demo della summarization (fase 5)
 ├── src/greenthumb/
 │   ├── config.py                # Settings (pydantic-settings o dataclass)
 │   ├── clock.py                 # Clock protocol + FrozenClock / SystemClock
@@ -83,6 +84,7 @@ acattaneo_progetto3/
 │   ├── memory.py                # configurazione memoria breve termine
 │   ├── agent.py                 # costruzione agente
 │   ├── response.py              # assemblaggio deterministico di ChatResponse
+│   ├── service.py               # chat(message, session_id) usata da API ed evaluation
 │   └── api.py                   # FastAPI
 ├── eval/
 │   ├── conversations.jsonl      # dataset (§10)
@@ -220,7 +222,10 @@ della traccia. La generazione è divisa in due livelli:
   - domanda risolta solo con dati ordine (fonte strutturata) → nessun cap;
   - retrieval usato, miglior score ≥ soglia alta → cap `high`;
   - retrieval usato, miglior score tra soglia bassa e alta → cap `medium`;
-  - retrieval senza risultati sopra soglia → cap `low`.
+  - retrieval senza risultati sopra soglia → cap `low`;
+  - nessun tool invocato → cap `medium`: un rifiuto fuori ambito, una domanda di chiarimento e
+    una risposta non ancorata alla KB hanno la stessa impronta osservabile, e il cap si decide
+    sul peggiore dei tre (ADR-058).
   L'escalation **non** influisce sulla confidence: `confidence` qualifica la risposta,
   `needs_human` ne governa l'instradamento. (ADR-007)
   Le soglie vengono calibrate in fase 2 e salvate in config.
@@ -262,7 +267,9 @@ usarlo), input Pydantic, output strutturato, casi limite gestiti senza eccezioni
 - Input: `query: str` (riformulata in modo autonomo, non la frase del cliente se ambigua),
   `doc_type: Literal["product","guide","policy"] | None`.
 - Output content: elenco testuale dei chunk con titolo e `doc_id`. Artifact: lista di
-  `{doc_id, score, chunk_id}`.
+  `{doc_id, score, chunk_id, text}`. Il testo del chunk è duplicato nell'artifact perché le
+  metriche RAGAS misurano la faithfulness contro i contesti recuperati, e ricavarli dal
+  contenuto formattato per il modello sarebbe fragile (ADR-059).
 - Casi limite: nessun risultato sopra soglia → messaggio esplicito che invita a non inventare e a
   valutare l'escalation; query vuota → errore di validazione leggibile.
 

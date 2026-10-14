@@ -1047,4 +1047,128 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   memoria può funzionare perfettamente e non servire a nulla**, se le istruzioni dell'agente
   non gli dicono che quella memoria è conoscenza legittima.
 
-<!-- Fase 0: aggiungere qui gli esiti degli spike (API verificate, strategia di structured output). -->
+## ADR-058 — Un turno senza alcun tool non può dichiarare confidence alta
+
+- **Contesto**: SPEC §5 elenca tre casi per il cap della confidence: risposta basata sui soli
+  dati ordine (nessun cap), retrieval usato (cap dagli score), retrieval senza risultati sopra
+  soglia (cap `low`). **Manca il quarto caso**: il turno in cui non è stato invocato alcun tool.
+  Non è un'eventualità remota — è la forma di tre comportamenti legittimi e previsti: il rifiuto
+  cortese di una domanda fuori ambito (SPEC §8), la domanda di chiarimento quando la richiesta è
+  ambigua (SPEC §8 punto 5), e la risposta di cortesia a un ringraziamento.
+- **Il problema**: è anche la forma del fallimento più grave, cioè il modello che risponde a una
+  domanda di giardinaggio attingendo alla propria conoscenza invece che alla KB, che la regola di
+  grounding vieta esplicitamente. Dal punto di vista di `response.py` i due casi sono
+  **indistinguibili**: entrambi sono turni senza alcun `ToolMessage`. Distinguerli richiederebbe
+  di leggere il testo della risposta e giudicarlo, che è esattamente ciò che ADR-002 rifiuta di
+  fare nel livello deterministico.
+- **Decisione**: cap a `medium`. Quando due casi hanno la stessa impronta osservabile, il cap si
+  decide sul peggiore dei due.
+- **Alternative scartate**:
+  - *nessun cap* (`high`): lascerebbe che una risposta non ancorata si presenti al cliente con
+    la massima autorevolezza. È il caso peggiore della coppia, e non è accettabile che sia anche
+    il più sicuro di sé.
+  - *cap a `low`*: penalizza il comportamento corretto. Una domanda di chiarimento è la *migliore*
+    risposta possibile a una richiesta ambigua, e marcarla `low` insegna all'evaluation che
+    chiedere è una debolezza. Confonde inoltre questo caso con il retrieval a vuoto, che è
+    genuinamente `low` perché lì il sistema ha cercato e non ha trovato.
+  - *classificare leggendo la risposta*: reintroduce un giudizio probabilistico nel livello che
+    esiste per non averne.
+- **Conseguenze**: il cap resta un tetto, non un'assegnazione. Se il modello propone `low` su un
+  rifiuto, la risposta resta `low` (`lower_of`): il cap non alza mai la confidence, la limita.
+  SPEC §5 estesa con il quarto caso. Coperto da test su trace costruite a mano.
+
+## ADR-059 — Il testo dei chunk viaggia nell'artifact, duplicato dal contenuto
+
+- **Contesto**: SPEC §7 prescriveva per il tool RAG un artifact di forma
+  `{doc_id, score, chunk_id}`, sufficiente all'intersezione di ADR-002. Le metriche RAGAS
+  (Faithfulness e ContextPrecision) vogliono però i `retrieved_contexts`, cioè **il testo** dei
+  chunk recuperati, non i loro identificatori: la faithfulness misura se la risposta è
+  sostenuta dai contesti, e senza i contesti non c'è nulla da misurare.
+- **Decisione**: aggiungere `text` a ogni voce dell'artifact, duplicando ciò che già compare nel
+  contenuto formattato per il modello.
+- **Perché duplicare invece di ricavare**: l'alternativa è ricostruire i contesti facendo il
+  parsing del testo mostrato al modello. Quel testo esiste per essere letto da un modello, e il
+  suo layout cambierà la prima volta che si ritocca la formattazione del tool. Un parser su di
+  esso si romperebbe **in silenzio**, e il sintomo sarebbe un punteggio di faithfulness calcolato
+  su contesti troncati o vuoti: un *numero*, non un errore. Un numero sbagliato in una relazione
+  di valutazione è peggio di un'eccezione.
+- **Perché questa duplicazione è sicura, a differenza di quella di ADR-048**: i due consumatori
+  (il modello e le metriche) leggono copie prodotte **nella stessa espressione, dalla stessa
+  lista `hits`**. Non esistono due punti del codice che possano divergere nel tempo, che è
+  l'unico vero costo della duplicazione.
+- **Alternative scartate**: rieseguire il retrieval nel runner dell'evaluation (due ricerche per
+  turno, e nulla garantisce che la seconda restituisca ciò che l'agente ha visto: l'indice può
+  essere stato ricostruito fra l'esecuzione e il calcolo delle metriche); far salvare i contesti
+  al modulo di retrieval attraverso un canale laterale (stato globale, e ADR-047 ha già mostrato
+  cosa costa un'informazione che viaggia per vie non dichiarate).
+- **Conseguenze**: l'artifact cresce di circa 519 caratteri per chunk (la media misurata in
+  ADR-045), ma **nessuno lo paga in token**: l'artifact non viene mai inviato al modello.
+  `ChatTurn.retrieved_contexts` lo espone all'evaluation in una riga. SPEC §7 aggiornata.
+
+## ADR-060 — Un solo registro delle escalation, condiviso fra il tool e il servizio
+
+- **Contesto**: il tool di escalation **scrive** i ticket, il servizio **legge** il registro per
+  calcolare `needs_human` (ADR-008). Entrambi hanno bisogno di un `EscalationsRepository`, e il
+  primo cablaggio ne costruiva due: uno dentro `build_default_agent` per il tool, uno nel
+  servizio.
+- **Cosa ha trovato il test di integrazione**: `escalate_to_human` era stato invocato e il
+  ticket scritto, eppure `needs_human` tornava `False`. In produzione le due istanze puntano allo
+  stesso file, perché entrambe leggono il percorso dalla stessa configurazione: funzionava **per
+  coincidenza di configurazione invece che per costruzione**. Il test passava un percorso
+  temporaneo a una sola delle due, le due sono divergite, e il tool ha scritto il ticket in un
+  file mentre il servizio ne leggeva un altro.
+- **Decisione**: `build_chat_service` crea **un** registro e lo passa a entrambi;
+  `build_default_agent` lo accetta come parametro. Lo stesso vale per l'istanza del modello, che
+  veniva anch'essa costruita due volte — una per l'agente e una per il middleware di
+  summarization — con il rischio speculare di due configurazioni divergenti.
+- **Alternative scartate**: lasciare che entrambi leggano il percorso dalla configurazione,
+  documentando che devono concordare (un'invariante mantenuta per convenzione è quella che si
+  rompe appena qualcuno aggiunge un parametro: è appena successo); un singleton a livello di
+  modulo (stato globale, e i test non potrebbero più isolare il file).
+- **Conseguenze**: ciò che rende `needs_human` deterministico non è solo che derivi da un file
+  invece che da un giudizio dell'LLM — è che ci sia **un** file e un solo oggetto che lo possiede.
+- **Nota di metodo per la relazione**: il difetto era nel codice di produzione ed era invisibile
+  in produzione. Il test non ha trovato un errore in sé stesso: ha trovato un errore che solo una
+  configurazione diversa poteva esporre. È il motivo per cui a un test va **concesso** di
+  configurare il sistema in modo diverso dalla produzione, invece di imitarla fedelmente: un test
+  che riproduce anche le coincidenze della produzione eredita anche i suoi punti ciechi.
+
+## ADR-061 — Un test che conta i messaggi non può esprimere il limite in turni
+
+- **Contesto**: il test di memoria «il conteggio dei messaggi smette di crescere» confrontava il
+  totale con `2 * numero_di_turni + 2`. È **passato per due fasi** e poi è diventato rosso a
+  fine fase 6, su una riesecuzione **senza una riga di codice cambiata**: `max([6, 6, 6, 10])`
+  contro un limite di 10.
+- **Causa misurata**: il limite è espresso in *turni*, la grandezza misurata è in *messaggi*, e
+  il cambio di unità nasconde un fattore che non controlliamo. Replaying la stessa
+  conversazione (script usa-e-getta, una sola esecuzione) le forme dei turni sono:
+
+  | Turno | Messaggi | Forma |
+  |---|---|---|
+  | 1 | 6 | human → AI(`get_order_status`) → tool → AI(`search_knowledge_base`) → tool → AI |
+  | 2 | 6 | summary → … → human → AI |
+  | 3 | 8 | summary → … → human → AI(`search_knowledge_base`) → tool → AI |
+  | 4 | 6 | summary → … → human → AI(`search_knowledge_base`) → tool → AI |
+
+  Un singolo turno contribuisce 2 messaggi se risponde da sé, 4 con un giro di tool, **6 con
+  due giri**. Il turno 1 ne usa due in sequenza — e si noti che qui `get_order_status` e
+  `search_knowledge_base` **non** sono stati emessi insieme, contrariamente a quanto osservato
+  in ADR-053 su un altro prompt: il raggruppamento delle chiamate è una scelta del modello, non
+  una garanzia. Con temperatura 0 e fornitori ruotati da OpenRouter (ADR-030), il numero di giri
+  varia fra esecuzioni identiche.
+- **Decisione**: asserire il limite che il middleware garantisce davvero. Tutto ciò che precede
+  il turno in corso deve stare nella finestra `keep` più il messaggio occupato dal riassunto:
+  `len(messages) - len(messages_of_current_turn(messages)) <= keep + 1`. Il confine del turno
+  corrente è individuato da `messages_of_current_turn`, la stessa funzione che `response.py` usa
+  per raccogliere le evidenze — nessuna seconda definizione di «turno» da tenere allineata
+  (ADR-006).
+- **Alternative scartate**: alzare il limite a 12 (sposta la soglia di flakiness senza
+  rimuoverla: con tre giri di tool un turno ne aggiunge 8); derivare il limite da
+  `agent_max_iterations` (corretto ma vacuo: con 8 iterazioni il limite diventa così alto da
+  non escludere nulla); ripetere la conversazione senza summarization per confrontare i due
+  conteggi (dimostrerebbe di più, ma raddoppia il costo di ogni esecuzione dei test di memoria
+  per un'informazione già registrata nella tabella di ADR-056).
+- **Conseguenze**: il test non dipende più da quante volte il modello decide di usare un tool.
+- **Lezione per la relazione**: un test verde non è una prova che l'asserzione sia giusta —
+  può essere una prova che il campione non ha ancora incontrato il caso che la smentisce.
+  Questo è passato per due fasi con un limite che non misurava il meccanismo sotto test.
