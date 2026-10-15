@@ -146,7 +146,7 @@ DoD:
 
 ---
 
-## [ ] Fase 7 — Evaluation 🔍 REVIEW
+## [x] Fase 7 — Evaluation ✅ completata (revisione utente effettuata)
 
 **Obiettivo**: misurare l'affidabilità e commentare i risultati.
 

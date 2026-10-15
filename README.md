@@ -8,8 +8,9 @@ a human operator is needed.
 Master's project in AI Solution Architecture. The final deliverable is a public Google Colab
 notebook that clones this repository; the repository is where the work happens.
 
-> **Status: phase 0 (bootstrap).** Most `make` targets below refer to code that does not exist
-> yet. See [docs/PLAN.md](docs/PLAN.md) for the phase ordering.
+> **Status: phase 8 (API).** Phases 0-7 are complete: data, retrieval, tools, agent, memory,
+> response assembly and evaluation. See [docs/PLAN.md](docs/PLAN.md) for the phase ordering and
+> [eval/results/summary.md](eval/results/summary.md) for the measured results.
 
 ## Documentation
 
@@ -46,6 +47,70 @@ cp .env.example .env   # then fill in OPENAI_API_KEY
 | `make lint` | `ruff check` + `ruff format --check` |
 | `make eval` | Full evaluation (costly — asks for confirmation) |
 | `make serve` | Start the FastAPI app on <http://localhost:8000> |
+
+## Running the API
+
+```bash
+make index    # once: builds the vector store (the agent cannot retrieve without it)
+make serve    # starts uvicorn on http://localhost:8000
+```
+
+`GET /health` reports the business date, the configured models and whether the vector store is
+ready — useful to check before the first request, and it reveals no secret.
+
+```bash
+curl -s http://localhost:8000/health
+```
+
+### A single question
+
+The example from the assignment. The business date is simulated and fixed to 12 October 2026
+(ADR-003), so "tomorrow" is 13 October regardless of when you run this.
+
+```bash
+curl -s -X POST http://localhost:8000/chat   -H 'Content-Type: application/json'   -d '{"message": "Quando arriva il mio ordine 1042? Posso piantare adesso i bulbi di tulipano?"}'
+```
+
+The body carries exactly the four fields the assignment fixes:
+
+```json
+{
+  "answer": "L'ordine 1042 e' stato spedito con BRT e la consegna stimata e' domani, 13 ottobre. Sui tulipani siamo nella finestra giusta: si mettono a dimora da meta' ottobre a fine novembre, a 12-15 cm di profondita' e 10 cm di distanza.",
+  "confidence": "high",
+  "sources": ["guides/bulbi_autunnali.md"],
+  "needs_human": false
+}
+```
+
+The session identifier is **not** in the body, so that the contract stays at four fields: it comes
+back in the `X-Session-Id` header. Add `-i` to see it.
+
+### A multi-turn conversation
+
+Capture the session from the first reply and pass it back, which is what lets the agent resolve
+"quelli dell'ordine di prima".
+
+```bash
+SESSION=$(curl -s -i -X POST http://localhost:8000/chat   -H 'Content-Type: application/json'   -d '{"message": "Ho un ordine 1046 in arrivo, cosa contiene?"}'   | awk -F': ' '/^[Xx]-[Ss]ession-[Ii]d/ {print $2}' | tr -d '\r')
+
+curl -s -X POST http://localhost:8000/chat   -H 'Content-Type: application/json'   -d "{\"message\": \"A che profondita' vanno piantati quelli dell'ordine di prima?\", \"session_id\": \"$SESSION\"}"
+```
+
+To forget a conversation:
+
+```bash
+curl -s -X DELETE "http://localhost:8000/sessions/$SESSION"
+```
+
+### Error behaviour
+
+| Situation | Response |
+|---|---|
+| Empty message, over 2000 characters, unknown field | `422`, before any model call |
+| Provider unreachable | `200` with the four-field courtesy reply, `needs_human: true`, and `X-Fallback: true` |
+
+The status stays 200 on a provider failure because the assignment fixes the contract; the header is
+what keeps the outage observable (ADR-009).
 
 ## License
 
