@@ -1,5 +1,5 @@
 # GreenThumb — developer entry points. Everything runs through `uv run`.
-.PHONY: help setup data index test test-llm lint format eval serve
+.PHONY: help setup data index test test-llm lint format eval eval-smoke serve
 
 help:
 	@echo "setup     uv sync + install pre-commit hooks"
@@ -10,6 +10,7 @@ help:
 	@echo "lint      ruff check + ruff format --check"
 	@echo "format    ruff format + ruff check --fix"
 	@echo "eval      run the full evaluation (costly: asks for confirmation)"
+	@echo "eval-smoke  replay one conversation through the whole pipeline (cheap)"
 	@echo "serve     start the FastAPI app on http://localhost:8000"
 
 setup:
@@ -42,9 +43,15 @@ eval:
 	@echo "The full evaluation performs many LLM calls (agent + judge) and costs money."
 	@printf "Continue? [y/N] " && read ans && [ "$$ans" = "y" ]
 	uv run python -m eval.runner
+	uv run python -m eval.metrics_deterministic
 	uv run python -m eval.metrics_ragas
 	uv run python -m eval.metrics_deepeval
-	uv run python -m eval.metrics_deterministic
+	uv run python -m eval.report
+
+# A single-turn conversation through the whole pipeline: a handful of LLM calls, enough to
+# prove the wiring without paying for the full dataset.
+eval-smoke:
+	uv run python -m eval.runner --only conv_01 --out eval/results/smoke_traces.jsonl
 
 serve:
 	uv run uvicorn greenthumb.api:app --host 0.0.0.0 --port 8000

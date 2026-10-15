@@ -1246,3 +1246,107 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   `memory` hanno `expected_tools` vuoto a ragion veduta: alla domanda «qual era il numero del
   mio ordine?» rispondere dalla memoria è legittimo tanto quanto rileggere l'ordine, e imporre
   l'uno o l'altro misurerebbe una preferenza nostra, non un requisito.
+
+## ADR-065 — Ogni esecuzione dell'evaluation ha il suo registro delle escalation
+
+- **Contesto**: `needs_human` non deriva da un giudizio dell'LLM ma dal registro delle
+  escalation della sessione (ADR-008, ADR-060). Il registro è un file, `escalations.jsonl`,
+  e in esercizio è **lo stesso file** per tutte le conversazioni.
+- **Il rischio**: la fase 7 esegue l'evaluation **due volte**, prima e dopo un intervento
+  correttivo, e confronta i numeri. Se le due esecuzioni condividessero il registro, la
+  seconda partirebbe con i ticket della prima già scritti. Oggi i `session_id` sono generati
+  a caso a ogni esecuzione, quindi l'idempotenza per sessione+motivo non farebbe collidere
+  nulla — ma è di nuovo un'invariante tenuta per **coincidenza** invece che per costruzione,
+  esattamente il difetto che ADR-060 ha chiuso nel servizio. Basterebbe fissare i
+  `session_id` per renderli riproducibili (una cosa sensata da volere) perché il confronto
+  prima/dopo diventasse silenziosamente falso.
+- **Decisione**: il runner crea un registro in una directory temporanea, valido per quella
+  sola esecuzione, e lo passa a `build_chat_service`. Il file di esercizio non viene toccato.
+- **Alternative scartate**: cancellare `escalations.jsonl` prima di ogni esecuzione
+  (distrugge dati di esercizio per un'esigenza dell'evaluation, e sarebbe irreversibile);
+  usare `session_id` casuali e fidarsi (è la coincidenza di cui sopra); un registro in memoria
+  per i test (il percorso del file fa parte di ciò che si vuole esercitare).
+- **Conseguenze**: una riesecuzione dell'evaluation è indipendente dalle precedenti **per
+  costruzione**. Effetto collaterale utile: l'evaluation non sporca il registro di esercizio
+  con ventisei ticket finti.
+
+## ADR-066 — Lo strumento di misura si testa come il sistema misurato
+
+- **Contesto**: l'harness di evaluation è ciò con cui si misura l'agente. Un harness
+  sbagliato non produce un errore: produce **numeri**, e quei numeri finiscono nella
+  relazione come affermazioni sull'agente. È lo stesso argomento di ADR-059 — un numero
+  sbagliato in una relazione di valutazione è peggio di un'eccezione — applicato allo
+  strumento invece che al dato.
+- **Decisione**: `tests/test_eval_harness.py`, 17 test, **nessuna chiamata LLM**. Il runner
+  è pilotato da un servizio finto che risponde da copione, le metriche deterministiche sono
+  alimentate con trace costruite a mano, l'aggregazione delle metriche giudicate è testata
+  senza giudice, e il report è reso dai file di punteggio. Nessun test chiede un modello.
+- **Quattro moduli in più rispetto a SPEC §3**, ciascuno per eliminare una duplicazione:
+  - `eval/dataset.py` — il dataset ha due lettori, il runner e i test;
+  - `eval/traces.py` — la forma della trace ha quattro lettori, e quattro moduli che
+    concordano su un nome di chiave lo fanno finché uno smette (ADR-006);
+  - `eval/judges.py` — il wiring verificato in ADR-033 è condiviso fra RAGAS e DeepEval, e
+    l'opt-out dalla telemetria di DeepEval (ADR-018) avviene qui, una volta, così nessun
+    modulo può dimenticarlo;
+  - `eval/report.py` — SPEC §10.4 chiede `summary.md` ma SPEC §3 non assegna a nessuno il
+    compito di scriverlo.
+- **Smoke run, perché il codice non provato non è codice che funziona**: `make eval-smoke`
+  replica **una** conversazione a turno singolo attraverso l'intera pipeline. Eseguito: le
+  sei metriche deterministiche, Faithfulness (1.0), ContextPrecisionWithReference (~1.0),
+  AnswerRelevancy (1.0), GEval escalation (0.9, con motivazione in italiano) e
+  KnowledgeRetention (1.0) girano tutte, e il report si genera. Costo misurato: sei chiamate.
+- **Conseguenze**: l'harness è verificato prima di spendere l'esecuzione completa. Da
+  ricordare: il pacchetto `eval` si invoca con `python -m eval.<modulo>` dalla radice del
+  repository — eseguire un file dell'harness per percorso non trova il pacchetto, e il
+  Makefile usa già la forma corretta.
+
+## ADR-067 — Una metrica dichiara la sua popolazione, e un valore assente non è uno zero
+
+- **Contesto**: tre scelte di misurazione che sembrano dettagli e decidono se i numeri
+  significhino qualcosa.
+- **Decisione (a) — ogni metrica dichiara su quali turni è definita, e un insieme vuoto
+  vale `None`, non 1.0 né 0.0.** `source_recall` si misura sui turni che attendono fonti,
+  `tool_selection_accuracy` su quelli che attendono tool. Includere i turni senza attese
+  gonfierebbe il punteggio con passaggi gratuiti: un rifiuto fuori ambito non attende tool,
+  quindi "ha usato i tool attesi" è vero in modo vacuo. Un `None` esplicito nel report dice
+  «questa metrica qui non si applica» invece di far sembrare perfetto ciò che non è stato
+  misurato.
+- **Decisione (b) — un punteggio che il giudice non ha prodotto è escluso dalla media e
+  contato a parte.** Un'eccezione del giudice (un `402`, un timeout, un parsing fallito) è
+  un'informazione sul giudice, non sull'agente. Mediarla come zero abbasserebbe il
+  risultato dell'agente per un guasto che non lo riguarda, e il colpevole sbagliato è il
+  peggior esito possibile per una relazione di valutazione. Il runner e le metriche quindi
+  **non** si fermano sul primo errore: perdere un punteggio è recuperabile, perdere
+  un'esecuzione intera no.
+- **Decisione (c) — `schema_validity` si riporta, dichiarando che è quasi vacua.** Il
+  livello deterministico costruisce `ChatResponse` da sé e un errore di parsing diventa il
+  fallback di cortesia (SPEC §5): una risposta non valida **non può** raggiungere un
+  chiamante, quindi la metrica vale 1.0 per costruzione. È richiesta da SPEC §10.3 e un
+  valore inferiore segnalerebbe una regressione reale, perciò resta — accompagnata da
+  `answered without fallback`, che è la cifra che porta davvero informazione sui guasti.
+- **Una metrica aggiunta**: `summarization fired (memory)` verifica che le conversazioni
+  `memory` abbiano davvero superato la soglia. Senza, un test di memoria superato non
+  dimostra nulla: l'entità del primo turno sopravvive banalmente se non è stato riassunto
+  niente (ADR-028, ADR-056). È l'unico modo di distinguere «la memoria regge» da «la memoria
+  non è stata messa alla prova».
+- **Conseguenze**: il report distingue tre esiti — rispettato, non rispettato, non
+  applicabile — invece di due. Costa una colonna in più e rende i numeri leggibili.
+
+## ADR-068 — Due osservazioni dallo smoke run, da portare nell'analisi
+
+- **Il retrieval ha restituito quattro chunk dello stesso documento.** Sulla domanda sulle
+  forbici, i quattro risultati di top-k sono tutti sezioni di
+  `products/forbici_potatura_bypass.md`, con score 0.8795, 0.8712, 0.8681 e 0.8515. Per
+  quella domanda è il comportamento giusto — la risposta sta lì — ma su una domanda a due
+  facce (un prodotto **e** una policy) il top-k può esaurirsi su un solo documento e lasciare
+  la seconda metà della domanda senza fonte. È un'ipotesi concreta per i casi
+  `multi_tool` e `returns_policy` dell'analisi, e un intervento misurabile: ricerca con
+  diversificazione (MMR) oppure due ricerche con `doc_type` diverso.
+- **GEval ha dato 0.9, non 1.0, a un'escalation corretta.** La motivazione in italiano è
+  pertinente e il punteggio è alto, ma conferma che il criterio discrimina invece di
+  saturare — il contrario del problema di ADR-033, dove `AnswerRelevancy` dava 0.5 a una
+  risposta corretta.
+- **Decisione: nessun intervento adesso.** Vale la disciplina di ADR-053: la sede degli
+  interventi correttivi è il confronto prima/dopo, e la metrica con cui si misura un
+  intervento va scelta **prima** di vedere i risultati (ADR-046). Queste due osservazioni
+  sono registrate come ipotesi già formulate, non come modifiche già fatte.
