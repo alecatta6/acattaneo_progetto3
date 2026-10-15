@@ -1172,3 +1172,77 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Lezione per la relazione**: un test verde non è una prova che l'asserzione sia giusta —
   può essere una prova che il campione non ha ancora incontrato il caso che la smentisce.
   Questo è passato per due fasi con un limite che non misurava il meccanismo sotto test.
+
+## ADR-062 — Venti conversazioni, non diciotto: il PLAN era rimasto indietro
+
+- **Contesto**: tre documenti davano tre numeri. SPEC §10.1 e ADR-016 dicono **20**
+  conversazioni, il PLAN alla fase 7 ne chiedeva **18**, e la traccia d'esame ne impone almeno
+  15. Non un dettaglio di conteggio: ADR-016 aveva alzato il numero a 20 **per una ragione
+  precisa**, cioè portare `escalation` e `multi_tool` a tre conversazioni ciascuna, perché
+  l'enum `reason` ha sette valori e due sole conversazioni non li coprivano.
+- **Decisione**: 20 conversazioni, come da ADR-016, e la riga del PLAN corretta.
+- **Alternative scartate**: 18 per aderenza al PLAN (farebbe perdere proprio la copertura che
+  ADR-016 esisteva per ottenere, e il risparmio sarebbe di due conversazioni su una spesa
+  dell'ordine del dollaro).
+- **Conseguenze**: distribuzione finale 3/3/2/2/3/3/2/2 su `product_info`,
+  `agronomic_advice`, `order_status`, `returns_policy`, `multi_tool`, `escalation`, `memory`,
+  `edge_cases`, per 43 turni e 12 conversazioni multi-turno (il minimo richiesto era 6).
+  Un test asserisce la distribuzione, così il numero non può più divergere fra documenti.
+- **Nota di metodo**: quando due documenti del progetto si contraddicono, vince quello che
+  porta con sé la motivazione. Un numero senza ragione è un refuso; un numero con un ADR
+  dietro è una decisione.
+
+## ADR-063 — Il dataset è verificato contro i dati veri, non contro una copia delle attese
+
+- **Contesto**: `eval/conversations.jsonl` è ground truth: ogni metrica di SPEC §10.3 misura
+  l'agente **contro** questo file. Un `doc_id` sbagliato o un numero d'ordine inesistente non
+  solleverebbe nulla da nessuna parte: abbasserebbe `source_recall` in silenzio, e il
+  `summary.md` riporterebbe il difetto come un **risultato sull'agente** invece che come un
+  errore del dataset. È lo stesso rischio di ADR-059 — un numero sbagliato in una relazione
+  di valutazione è peggio di un'eccezione.
+- **Decisione**: `tests/test_eval_dataset.py` verifica il dataset contro la knowledge base e
+  gli ordini **reali**, caricati con gli stessi moduli che usa l'agente, non contro un elenco
+  di attese ricopiato a mano. Ogni `expected_sources` deve esistere fra i `doc_id` caricati da
+  `load_knowledge_base`, ogni numero d'ordine di quattro cifre citato dal cliente deve
+  risolvere in `OrdersRepository` — e l'ordine 9999 degli `edge_cases` deve **non** esistere,
+  altrimenti il caso limite non esiste. I nomi dei tool sono importati dai moduli dei tool
+  (`TOOL_NAME`), non scritti come stringhe.
+- **Tre difetti trovati subito**, ciascuno invisibile a un'ispezione a vista:
+  1. due turni dichiaravano una `expected_sources` ma non `search_knowledge_base` fra i tool
+     attesi — una fonte senza il recupero che la produce è un'attesa impossibile, che avrebbe
+     prodotto un falso negativo su `source_recall`;
+  2. un terzo turno aveva lo stesso difetto con tre tool in gioco, scoperto solo dopo la
+     correzione dei primi due;
+  3. una `reference_answer` di otto parole, troppo magra perché un giudice LLM potesse
+     distinguere una risposta corretta dal rumore.
+- **Un'asserzione sbagliata era nel test, non nel dataset**: il controllo sulla copertura
+  dell'escalation pretendeva che i turni che escalano stessero *solo* nelle categorie
+  `escalation` ed `edge_cases`. Ne esiste però uno deliberato in `memory`, ed è il punto di
+  quella conversazione: verificare che `needs_human` sopravviva alla summarization (ADR-008).
+  Corretto il test in inclusione (`⊆`) invece di uguaglianza.
+- **Conseguenze**: 17 test, nessuna chiamata LLM. Il dataset non può divergere dai dati senza
+  che `make test` lo dica. Vale la lezione di ADR-037: un validatore ha valore solo se qualcosa
+  può fallire, e qui è fallito tre volte alla prima esecuzione.
+
+## ADR-064 — `expected_tools` si misura per inclusione, non per uguaglianza
+
+- **Contesto**: la metrica `tool_selection_accuracy` di SPEC §10.3 confronta i tool invocati
+  con quelli attesi. Confrontare i due **insiemi per uguaglianza** sembra la lettura naturale.
+- **Perché non funziona**: ADR-061 ha misurato che il numero di giri di tool su uno stesso
+  turno **varia fra esecuzioni identiche**, perché il raggruppamento delle chiamate è una
+  scelta del modello (ADR-053 lo aveva visto raggruppare, ADR-061 lo ha visto separare). Un
+  agente che ricontrolla un ordine già discusso qualche turno prima sta facendo la cosa
+  giusta — l'alternativa è fidarsi del riassunto per un dato che il tool può rileggere — ma con
+  l'uguaglianza quel comportamento corretto conterebbe come errore.
+- **Decisione**: `expected_tools` elenca i tool **senza i quali il turno non può essere
+  corretto**, e la metrica misura `expected ⊆ invocati`. Un tool in più non penalizza; uno
+  mancante sì.
+- **Alternative scartate**: uguaglianza fra insiemi (misurerebbe la variabilità del modello
+  invece della sua scelta, e renderebbe il confronto prima/dopo della fase 7 illeggibile);
+  elencare in `expected_tools` ogni tool plausibile (sposta il giudizio dentro il ground truth
+  e rende la metrica vacua, perché tutto diventa atteso).
+- **Conseguenze**: la metrica risponde alla domanda «l'agente ha raccolto le evidenze che
+  servivano?» e non «ha fatto esattamente i passi che avevo immaginato?». Due turni dei casi
+  `memory` hanno `expected_tools` vuoto a ragion veduta: alla domanda «qual era il numero del
+  mio ordine?» rispondere dalla memoria è legittimo tanto quanto rileggere l'ordine, e imporre
+  l'uno o l'altro misurerebbe una preferenza nostra, non un requisito.

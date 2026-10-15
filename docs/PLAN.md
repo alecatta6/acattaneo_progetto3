@@ -151,7 +151,7 @@ DoD:
 **Obiettivo**: misurare l'affidabilità e commentare i risultati.
 
 Task:
-1. `eval/conversations.jsonl` (18 conversazioni, SPEC §10.1). **Fermarsi e farlo rivedere**
+1. `eval/conversations.jsonl` (20 conversazioni, SPEC §10.1 e ADR-016/062). **Fermarsi e farlo rivedere**
    prima di eseguire: il dataset determina tutto il resto.
 2. Runner con salvataggio delle trace; metriche RAGAS, DeepEval e deterministiche.
 3. Prima esecuzione completa (chiedere conferma: ha un costo), `summary.md`.
