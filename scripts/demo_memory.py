@@ -6,7 +6,8 @@ number mentioned in the first turn is still usable several turns later, after th
 messages have been replaced.
 
 The trigger is lowered from the production value so the threshold is crossed in a handful
-of turns. With 2500 tokens a realistic conversation takes much longer to get there, and
+of turns. At the production value a realistic conversation takes much longer to get there,
+and
 every extra turn is a paid call.
 
 Run with: uv run python scripts/demo_memory.py
@@ -28,11 +29,12 @@ from greenthumb.orders_repository import OrdersRepository
 from greenthumb.retrieval import open_index
 
 WIDTH = 96
-# Lowered from the production 8000 so the threshold is crossed within a few turns, but not
+# Lowered from the production 6000 so the threshold is crossed within a few turns, but not
 # so far that summarization runs before every call: the trigger is compared against the
-# provider's reported request total, which starts around 2583 and grows by roughly a
-# thousand tokens per turn (ADR-056). Applied with model_copy, which by design does not
-# re-run the validator that would refuse this value in production.
+# provider's reported request total, which starts around 2583 and grows by roughly six
+# hundred tokens per turn — measured, after ADR-056's estimate of a thousand turned out to
+# be too high (ADR-072). Applied with model_copy, which by design does not re-run the
+# validator that would refuse this value in production.
 DEMO_TRIGGER_TOKENS = 3500
 DEMO_KEEP_MESSAGES = 4
 

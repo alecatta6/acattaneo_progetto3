@@ -5,18 +5,18 @@
 Ogni requisito della consegna deve essere soddisfatto in un punto verificabile. Questa tabella
 va mantenuta aggiornata: a fine progetto è la checklist di consegna.
 
-| # | Requisito | Dove viene soddisfatto |
-|---|---|---|
-| R1 | Agente ReAct con LangChain e LiteLLM | `src/greenthumb/agent.py` (§8) |
-| R2 | ≥3 tool: RAG sul catalogo, stato ordine, escalation | `src/greenthumb/tools/` (§7) |
-| R3 | Memoria breve termine esplicita + lungo termine semantica | `memory.py` (§9), `retrieval.py` (§6) |
-| R4 | Output JSON: `answer`, `confidence`, `sources`, `needs_human` | `schemas.py`, `response.py` (§5) |
-| R5 | KB 37 documenti + `orders.json` ≥24 ordini | `data/` (§4) |
-| R6 | Eval ≥15 conversazioni, ≥1 metrica RAGAS + ≥1 DeepEval, con commento | `eval/` (§10) |
-| R7 | Deploy locale FastAPI con istruzioni di avvio | `api.py`, `README.md` (§11) |
-| R8 | Relazione tecnica: architettura, memoria, analisi eval | notebook + `docs/DECISIONS.md` (§13) |
-| R9 | Naming inglese snake_case / CamelCase, docstring ovunque | tutto il codice, verificato da ruff |
-| R10 | Consegna come notebook Colab pubblico | `notebooks/greenthumb_delivery.ipynb` (§13) |
+| # | Requisito | Dove viene soddisfatto | Verificato |
+|---|---|---|---|
+| R1 | Agente ReAct con LangChain e LiteLLM | `src/greenthumb/agent.py` (§8) | ✅ `create_agent` + `ChatLiteLLM`; notebook §6 |
+| R2 | ≥3 tool: RAG sul catalogo, stato ordine, escalation | `src/greenthumb/tools/` (§7) | ✅ tre tool, casi limite in `scripts/demo_tools.py`; notebook §5 |
+| R3 | Memoria breve termine esplicita + lungo termine semantica | `memory.py` (§9), `retrieval.py` (§6) | ✅ summarization misurata (2/2 nell'eval); notebook §4 e §7 |
+| R4 | Output JSON: `answer`, `confidence`, `sources`, `needs_human` | `schemas.py`, `response.py` (§5) | ✅ `schema validity` 100% su 50 turni; test sul contratto a 4 campi |
+| R5 | KB 37 documenti + `orders.json` ≥24 ordini | `data/` (§4) | ✅ 37 documenti, 26 ordini, `make data` verde |
+| R6 | Eval ≥15 conversazioni, ≥1 metrica RAGAS + ≥1 DeepEval, con commento | `eval/` (§10) | ✅ 20 conversazioni, 2 RAGAS + 3 DeepEval + 6 deterministiche, confronto prima/dopo |
+| R7 | Deploy locale FastAPI con istruzioni di avvio | `api.py`, `README.md` (§11) | ✅ provato con server reale e i curl del README (ADR-074) |
+| R8 | Relazione tecnica: architettura, memoria, analisi eval | notebook §10 + `docs/DECISIONS.md` (§13) | ✅ 75 ADR; relazione in sei sottosezioni |
+| R9 | Naming inglese snake_case / CamelCase, docstring ovunque | tutto il codice, verificato da ruff | ✅ `make lint` pulito con regole `D`, `N`, `ANN` |
+| R10 | Consegna come notebook Colab pubblico | `notebooks/greenthumb_delivery.ipynb` (§13) | ⏳ notebook eseguito con output salvati; **resta da pubblicare su Colab dopo il push** |
 
 ## 2. Stack
 

@@ -1575,3 +1575,46 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   qualche giorno». È la prudenza già registrata in ADR-053, che l'intervento sull'escalation
   non ha toccato — e non doveva: quell'intervento aveva un altro bersaglio. Resta il candidato
   naturale per un secondo intervento misurato, se se ne farà uno.
+
+## ADR-075 — Il notebook di consegna è generato, non scritto a mano
+
+- **Contesto**: `notebooks/greenthumb_delivery.ipynb` è il deliverable (SPEC §13). Un
+  notebook modificato in posto accumula output obsoleti, metadati di esecuzione e diff
+  illeggibili: il formato `.ipynb` è JSON con il codice annegato dentro, e una revisione
+  seria di quel diff non è praticabile.
+- **Decisione**: `scripts/build_notebook.py` genera il notebook; il contenuto vive in
+  stringhe Python in un file che si legge e si rivede come codice. È la stessa scelta di
+  ADR-069 per il report dell'evaluation, applicata a un artefatto più grande.
+- **Conseguenza per il lint**: il file è in gran parte *contenuto* del notebook, prosa
+  Markdown e celle di codice dentro stringhe. `E501` è disattivata **solo** per quel file,
+  con un commento che spiega perché: riformattare la prosa a 100 colonne peggiorerebbe
+  l'artefatto per soddisfare una regola sul sorgente che lo genera. Tutte le altre regole
+  restano attive.
+- **Eseguibile in due ambienti, per costruzione**: ogni cella che differisce fra Colab e
+  locale si dirama su `IN_COLAB`. Su Colab clona il repository, installa da
+  `requirements.txt` e legge i Secrets; in locale usa il checkout corrente. Non è una
+  comodità: è **l'unico modo di popolare e verificare gli output prima della consegna**, e
+  `scripts/build_notebook.py` più `nbclient` fanno esattamente questo.
+- **Due difetti trovati eseguendolo, che una revisione a vista non avrebbe visto**:
+  1. **le sezioni con chiamate al modello venivano saltate in locale.** Il notebook
+     derivava `HAS_KEY` da `os.environ`, dove su Colab i Secrets arrivano — ma in locale la
+     chiave sta nel `.env`, che `Settings` legge da sé e non esporta. Le tre sezioni più
+     importanti (agente, memoria, API) non avevano output. Corretto leggendo la chiave
+     attraverso `Settings` ed esportandola nell'ambiente quando non si è su Colab.
+  2. **la sezione dell'agente scriveva nel registro di esercizio.** Il primo output salvato
+     citava `ESC-0006`: eseguire il notebook accumulava ticket, quindi il numero mostrato
+     cambiava a ogni esecuzione e chi lo eseguiva sporcava il proprio registro.
+     `scripts/demo_tools.py` aveva già risolto lo stesso problema con un file temporaneo; la
+     sezione 6 ora fa lo stesso e mostra sempre `ESC-0001`.
+- **Tre firme sbagliate per memoria**, trovate dalla prima esecuzione: `search(k=...)`
+  invece di `top_k`, `SearchHit.score` invece di `similarity`, `TurnEvidence(retrieval_used=...)`
+  invece di `retrieval_ran`. È la regola 3 di CLAUDE.md applicata al codice **del progetto
+  stesso**: non fidarsi della memoria sulle firme vale anche per le API che si sono scritte.
+- **Controllo di sicurezza**: gli output salvati sono stati scansionati per chiavi del
+  provider (`sk-...`) prima del commit. Nessuna presente — ed è un controllo da rifare a ogni
+  rigenerazione, perché un notebook con output salvati è un file che **contiene** ciò che ha
+  stampato.
+- **Limite dichiarato**: gli output committati provengono dall'esecuzione **locale**. La
+  verifica su runtime Colab pulito richiede che i commit siano pubblicati su GitHub, perché
+  la prima cella clona il repository: finché il push non avviene, su Colab il notebook
+  clonerebbe una versione precedente. È l'ultimo passo di R10 e non è ancora fatto.

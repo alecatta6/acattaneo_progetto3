@@ -43,6 +43,12 @@ dev = [
     "pytest>=8.3",
     "ruff>=0.9",
     "pre-commit>=4.0",
+    # The delivery notebook is a deliverable (SPEC section 13): nbformat builds it and
+    # nbclient executes it so that the committed copy carries real outputs. Not needed to
+    # run the agent, hence dev-only — Colab brings its own notebook runtime.
+    "nbformat>=5.10",
+    "nbclient>=0.10",
+    "ipykernel>=6.29",
 ]
 
 [build-system]
@@ -75,11 +81,28 @@ ignore = [
     "D213",   # mutually exclusive with D212 (ruff default style)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# build_notebook.py is mostly the delivery notebook's own content, held in triple-quoted
+# strings: Markdown prose and the notebook's code cells. Reflowing that payload to 100
+# columns would hurt the artefact being generated to satisfy a rule about this file's
+# source, so E501 is off here only. The module's own code still obeys every other rule.
+"scripts/build_notebook.py" = ["E501"]
+# The notebook is a presentation artefact: a print line that runs past 100 columns reads
+# better in a cell than wrapped, and annotating a one-off display helper is noise. The
+# checks that catch real mistakes — undefined names, unused imports, bad imports — stay on,
+# which is why the notebook is linted at all instead of excluded (ADR-075).
+"notebooks/*.ipynb" = ["E501", "ANN"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.format]
 docstring-code-format = true
+# The formatter has its own line length and does not honour the linter's per-file ignores,
+# so it would wrap the notebook's print statements across several lines — worse to read in a
+# cell than the long line it replaces. Only formatting is skipped: `ruff check` still runs
+# on the notebook and still catches undefined names and unused imports (ADR-075).
+exclude = ["notebooks/*.ipynb"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
