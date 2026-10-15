@@ -27,7 +27,7 @@ def test_defaults_match_the_specification() -> None:
     settings = _settings()
     assert settings.today == dt.date(2026, 10, 12)  # ADR-003
     assert settings.agent_max_iterations == 8  # ADR-012
-    assert settings.summary_trigger_tokens == 8000  # ADR-004, ricalibrato in ADR-056
+    assert settings.summary_trigger_tokens == 6000  # ADR-004, ricalibrato in ADR-056/072
     assert settings.summary_keep_messages == 6
     assert settings.retrieval_top_k == 4
     assert settings.embedding_model == "intfloat/multilingual-e5-base"  # ADR-005
@@ -185,8 +185,14 @@ def test_env_can_still_override_with_a_real_threshold(
 
 
 def test_summary_trigger_is_the_calibrated_value() -> None:
-    """Phase 5 measured the floor; 2500 from the original spec fires on every call."""
-    assert _settings().summary_trigger_tokens == 8000
+    """Measured twice, not estimated.
+
+    Phase 5 measured the request floor, which rules out the original 2500: it fires on
+    every call. Phase 7 measured the *growth* and found ~600 tokens per turn rather than
+    the ~1000 assumed, so 8000 landed around the twelfth turn and summarization never fired
+    in the whole evaluation (ADR-072).
+    """
+    assert _settings().summary_trigger_tokens == 6000
 
 
 def test_summary_trigger_below_the_measured_floor_is_rejected() -> None:

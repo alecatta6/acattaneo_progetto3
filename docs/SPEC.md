@@ -324,7 +324,8 @@ usarlo), input Pydantic, output strutturato, casi limite gestiti senza eccezioni
 
 - **Strategia: summarization** (non trimming), tramite il middleware di summarization di
   LangChain 1.x (verificare nome e parametri sulla versione installata).
-- Parametri calibrati in fase 5 (ADR-056): trigger a **8000 token**, ultimi 6 messaggi
+- Parametri calibrati in fase 5 e ricalibrati in fase 7 (ADR-056, ADR-072): trigger a
+  **6000 token**, ultimi 6 messaggi
   mantenuti integri. Attenzione: la soglia si confronta con il `total_tokens` che il provider
   riporta per l'intera richiesta, **system prompt e schemi dei tool inclusi**, non con i soli
   token della conversazione. Il pavimento misurato e' ~2583 token alla prima chiamata, quindi

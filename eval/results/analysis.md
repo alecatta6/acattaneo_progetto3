@@ -212,3 +212,64 @@ L'intervento si **accetta**: la metrica primaria dichiarata prima di eseguirlo s
 punti, la secondaria la segue, e i casi corretti sono quelli che il cambiamento prendeva di
 mira. Si accetta **con due costi dichiarati**: una regressione su conv_19#2 e un calo di
 0.024 su `answer_relevancy` dovuto a risposte che diventano procedura invece di contenuto.
+
+## Terza misura: far scattare davvero la summarization
+
+Le due esecuzioni precedenti lasciavano aperto il reperto più grave — `summarization fired
+(memory)` a 0/2 — che rendeva vacuo il punteggio di `knowledge_retention`. Risolto, e la
+soluzione è stata diversa da quella che sembrava.
+
+### La soglia era tarata su una stima sbagliata
+
+Prima di allungare il dataset ho **misurato** quanti token le due conversazioni portavano
+davvero, ricostruendo la lista dei messaggi dalle trace e contandola con lo stesso
+`token_counter` del middleware — offline, senza spendere una chiamata:
+
+| | token di conversazione | con system prompt |
+|---|---|---|
+| conv_17, 7 turni | 2 892 | ~4 466 |
+| conv_18, 6 turni | 2 374 | ~3 948 |
+
+Contro una soglia di 8 000. Non erano conversazioni *appena troppo corte*: erano a poco più
+di metà strada. **La premessa di ADR-056 era sbagliata in modo sostanziale**: stimava ~1 000
+token per turno, la crescita reale è ~600, e alcuni turni ne aggiungono quasi nulla — il
+settimo di conv_17 ne aggiunge 54. Con 8 000, la summarization scattava intorno al
+dodicesimo turno: una conversazione che nel customer care non esiste.
+
+Per questo l'intervento è stato doppio: soglia **ricalibrata a 6 000** sulla crescita
+misurata, e conversazioni **portate a 10 turni** ciascuna. Allungarle fino a 13 lasciando la
+soglia dov'era avrebbe fatto passare la metrica senza correggere la taratura, e avrebbe
+messo 26 turni su 56 in due sole conversazioni.
+
+### Esito
+
+| Metrica | 43 turni (dopo l'intervento) | 50 turni (conversazioni allungate) |
+|---|---|---|
+| `summarization fired (memory)` | **0/2** | **2/2** |
+| `knowledge_retention` | 1.000 | 0.950 |
+| `needs_human accuracy` | 95,3% (41/43) | 96,0% (48/50) |
+| `answer_relevancy` | 0.884 | 0.889 |
+| `escalation_correctness` | 0.725 | 0.725 |
+
+La summarization è scattata **cinque volte** fra le due conversazioni, e i due turni di
+retention hanno recuperato l'entità del primo turno *dopo* il riassunto: conv_17 ha
+risposto «il suo ordine è il numero 1046 […] consegna stimata per il 14 ottobre», conv_18
+«il totale dell'ordine 1047 è di 34,10 EUR».
+
+**`knowledge_retention` è scesa da 1.000 a 0.950, e questo è il risultato buono.** Prima
+valeva 1.000 perché non c'era nulla da ricordare: niente era stato riassunto. Ora conv_17
+vale 1.0 e conv_18 vale 0.9 su una conversazione realmente compattata — un numero più
+basso che per la prima volta misura il meccanismo che dice di misurare.
+
+### Due avvertenze sulla lettura della tabella
+
+**I denominatori sono cambiati.** Le due conversazioni hanno 8 turni in più, quindi le
+percentuali su 50 turni non sono confrontabili turno per turno con quelle su 43:
+`source recall` passa da 28 a 35 turni valutati e `tool selection accuracy` da 40 a 47. Il
+confronto prima/dopo dell'intervento sul prompt resta quello della sezione precedente, sui
+due stati a 43 turni conservati in `before/` e `after/`.
+
+**Le trace sono di due esecuzioni diverse.** Trenta turni vengono dalla seconda esecuzione
+completa, venti dalla riesecuzione delle due conversazioni `memory`. Rigiocarne venti invece
+di cinquanta è costato meno della metà, e il campo `run_label` su ogni riga rende la
+provenienza verificabile invece di nasconderla.

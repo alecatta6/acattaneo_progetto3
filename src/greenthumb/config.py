@@ -89,11 +89,14 @@ class Settings(BaseSettings):
     )
 
     # --- Short-term memory (ADR-004) ---
-    # Calibrated in phase 5 against what the provider actually reports (ADR-056). The
+    # Calibrated in phase 5 against what the provider actually reports (ADR-056), then
+    # re-calibrated in phase 7 against measured growth instead of an estimate: real
+    # customer-care turns add ~600 tokens each, not the ~1000 first assumed, so 8000 landed
+    # around the twelfth turn and summarization never fired in the evaluation (ADR-072). The
     # trigger is compared against the reported total_tokens of the whole request, system
     # prompt and tool schemas included, not against the conversation alone.
     summary_trigger_tokens: int = Field(
-        default=8000,
+        default=6000,
         le=200_000,
         description=(
             "Reported request tokens above which the conversation is summarised. Must stay "
@@ -170,7 +173,7 @@ class Settings(BaseSettings):
                 f"{MEASURED_REQUEST_FLOOR_TOKENS} token, perche' la soglia si confronta con "
                 "il totale riportato dal provider, system prompt e schemi dei tool inclusi. "
                 f"Sotto {MIN_SUMMARY_TRIGGER_TOKENS} la summarization scatterebbe a ogni "
-                "chiamata. Il valore calibrato e' 8000: vedi ADR-056."
+                "chiamata. Il valore calibrato e' 6000: vedi ADR-056 e ADR-072."
             )
         return value
 

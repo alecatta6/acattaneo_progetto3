@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import pathlib
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 from pydantic import BaseModel, ConfigDict
 
@@ -33,6 +33,11 @@ class TurnTrace(BaseModel):
     category: str
     turn_index: int
     session_id: str
+    # Which replay produced this row. A trace file may mix runs, because re-replaying two
+    # conversations is far cheaper than replaying twenty when only those two changed. The
+    # label makes that mixing auditable instead of invisible (ADR-072); it carries a default
+    # so trace files written before it existed still load.
+    run_label: str = "main"
 
     # --- From the dataset ---
     user: str
@@ -109,6 +114,35 @@ def write_traces(path: pathlib.Path, traces: Iterable[TurnTrace]) -> int:
             handle.write(trace.model_dump_json() + "\n")
             written += 1
     return written
+
+
+def merge_traces(
+    existing: Sequence[TurnTrace], replacements: Sequence[TurnTrace]
+) -> list[TurnTrace]:
+    """Replace the traces of the re-replayed conversations, keeping every other one.
+
+    Args:
+        existing: The traces already on disk.
+        replacements: The traces just produced.
+
+    Returns:
+        The merged traces, in dataset order: each replayed conversation appears once, with
+        its new rows, at the position its old rows occupied.
+    """
+    replayed = {trace.conversation_id for trace in replacements}
+    by_conversation: dict[str, list[TurnTrace]] = {}
+    order: list[str] = []
+    for trace in [*existing, *replacements]:
+        if trace.conversation_id not in order:
+            order.append(trace.conversation_id)
+        if trace.conversation_id in replayed and trace not in replacements:
+            continue
+        by_conversation.setdefault(trace.conversation_id, []).append(trace)
+    return [
+        trace
+        for conversation_id in order
+        for trace in sorted(by_conversation[conversation_id], key=lambda t: t.turn_index)
+    ]
 
 
 def load_traces(path: pathlib.Path) -> list[TurnTrace]:

@@ -43,9 +43,12 @@ TURN_KEYS = frozenset(
     {"user", "reference_answer", "expected_sources", "expected_tools", "expected_needs_human"}
 )
 
-# The summarization middleware fires around the sixth turn (ADR-056). A shorter
-# conversation would test a mechanism that never ran — the mistake of ADR-028.
-MEMORY_MIN_TURNS = 6
+# Sized by measurement, not by estimate. The first evaluation run showed summarization
+# never firing on conversations of six and seven turns: real turns add ~600 tokens, not the
+# ~1000 ADR-056 assumed. With the re-calibrated 6000-token trigger the summarizer fires
+# around the eighth turn, so a ``memory`` conversation shorter than nine turns would again
+# test a mechanism that never ran — the mistake of ADR-028, in its third form (ADR-072).
+MEMORY_MIN_TURNS = 9
 
 
 @pytest.fixture(scope="module")

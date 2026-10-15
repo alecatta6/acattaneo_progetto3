@@ -13,9 +13,9 @@ import pathlib
 from typing import Any
 
 import pytest
-from eval import metrics_deepeval, metrics_deterministic, report, runner
+from eval import metrics_deepeval, metrics_deterministic, partial, report, runner
 from eval.dataset import Conversation, DatasetTurn, load_conversations
-from eval.traces import TurnTrace, load_traces, write_traces
+from eval.traces import TurnTrace, load_traces, merge_traces, write_traces
 
 from greenthumb.response import RetrievedChunk
 from greenthumb.schemas import ChatResponse
@@ -291,7 +291,8 @@ def test_a_missing_judged_score_is_not_averaged_as_zero() -> None:
         metrics_deepeval.ItemScore("conv_01", 1, "product_info", "answer_relevancy", 1.0),
         metrics_deepeval.ItemScore("conv_02", 1, "product_info", "answer_relevancy", None),
     ]
-    summary = metrics_deepeval.aggregate(scores)["answer_relevancy"]
+    rows = [score.to_dict() for score in scores]
+    summary = partial.aggregate_rows(rows, "items")["answer_relevancy"]
     assert summary["mean"] == 1.0
     assert summary["items"] == 1
     assert summary["missing"] == 1
@@ -303,7 +304,8 @@ def test_judged_aggregation_splits_by_category() -> None:
         metrics_deepeval.ItemScore("conv_01", 1, "product_info", "answer_relevancy", 1.0),
         metrics_deepeval.ItemScore("conv_14", 1, "escalation", "answer_relevancy", 0.0),
     ]
-    summary = metrics_deepeval.aggregate(scores)["answer_relevancy"]
+    rows = [score.to_dict() for score in scores]
+    summary = partial.aggregate_rows(rows, "items")["answer_relevancy"]
     assert summary["mean"] == 0.5
     assert summary["by_category"] == {"escalation": 0.0, "product_info": 1.0}
 
@@ -377,3 +379,104 @@ def test_the_report_includes_the_hand_written_analysis(
 
     text = report.build_report(traces_path=traces_path)
     assert "La causa era il prompt." in text
+
+
+# --- Partial re-replay and partial re-scoring -----------------------------------------
+
+
+def test_merging_traces_replaces_only_the_replayed_conversations() -> None:
+    """A partial replay must not drop the conversations it did not touch."""
+    existing = [
+        make_trace(conversation_id="conv_01", turn_index=1),
+        make_trace(conversation_id="conv_17", category="memory", turn_index=1),
+        make_trace(conversation_id="conv_17", category="memory", turn_index=2),
+        make_trace(conversation_id="conv_20", category="edge_cases", turn_index=1),
+    ]
+    fresh = [
+        make_trace(
+            conversation_id="conv_17", category="memory", turn_index=n, run_label="memory-rerun"
+        )
+        for n in (1, 2, 3)
+    ]
+    merged = merge_traces(existing, fresh)
+
+    assert [(t.conversation_id, t.turn_index) for t in merged] == [
+        ("conv_01", 1),
+        ("conv_17", 1),
+        ("conv_17", 2),
+        ("conv_17", 3),
+        ("conv_20", 1),
+    ]
+    # The replayed conversation carries the new label, the others keep the old one.
+    labels = {t.conversation_id: t.run_label for t in merged}
+    assert labels == {"conv_01": "main", "conv_17": "memory-rerun", "conv_20": "main"}
+
+
+def test_a_trace_written_before_the_label_existed_still_loads(
+    tmp_path: pathlib.Path,
+) -> None:
+    """The provenance label has a default, so earlier trace files remain readable."""
+    row = make_trace().model_dump()
+    del row["run_label"]
+    path = tmp_path / "traces.jsonl"
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    assert load_traces(path)[0].run_label == "main"
+
+
+def test_merging_scores_keeps_the_metrics_that_were_not_recomputed(
+    tmp_path: pathlib.Path,
+) -> None:
+    """Re-scoring one metric must not wipe another metric's saved scores."""
+    path = tmp_path / "deepeval.json"
+    path.write_text(
+        json.dumps(
+            {
+                "summary": {},
+                "items": [
+                    {
+                        "conversation_id": "conv_17",
+                        "turn_index": 1,
+                        "category": "memory",
+                        "metric": "answer_relevancy",
+                        "value": 0.5,
+                        "reason": None,
+                    },
+                    {
+                        "conversation_id": "conv_17",
+                        "turn_index": None,
+                        "category": "memory",
+                        "metric": "knowledge_retention",
+                        "value": 1.0,
+                        "reason": None,
+                    },
+                    {
+                        "conversation_id": "conv_01",
+                        "turn_index": 1,
+                        "category": "product_info",
+                        "metric": "answer_relevancy",
+                        "value": 1.0,
+                        "reason": None,
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    fresh = [
+        metrics_deepeval.ItemScore("conv_17", 1, "memory", "answer_relevancy", 0.9),
+    ]
+    rows = partial.merge_rows(path, "items", fresh)
+
+    keys = {(row["conversation_id"], row["metric"], row["value"]) for row in rows}
+    # The recomputed pair is replaced...
+    assert ("conv_17", "answer_relevancy", 0.9) in keys
+    assert ("conv_17", "answer_relevancy", 0.5) not in keys
+    # ...while the other metric of the same conversation, and the other conversation, stay.
+    assert ("conv_17", "knowledge_retention", 1.0) in keys
+    assert ("conv_01", "answer_relevancy", 1.0) in keys
+
+
+def test_scoring_a_conversation_with_no_trace_fails_loudly() -> None:
+    """A typo in --only must stop the run instead of silently scoring nothing."""
+    with pytest.raises(SystemExit, match="conv_99"):
+        partial.select([make_trace()], ["conv_99"])

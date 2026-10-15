@@ -1469,3 +1469,73 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   spettacolari, ed entrambi erano **esclusi dal giudizio** — il secondo perché un terzo dei
   suoi fallimenti dipende da aspettative troppo strette del dataset. Scegliendo la metrica
   dopo avrei dichiarato un successo più grande misurando in parte il mio stesso ground truth.
+
+## ADR-072 — La soglia di summarization era tarata su una stima, non su una misura
+
+- **Contesto**: in entrambe le esecuzioni `summarization fired (memory)` valeva **0/2** e
+  `knowledge_retention` valeva **1.000**. La metrica scritta per smascherare il falso
+  positivo di ADR-028 lo aveva smascherato: il punteggio perfetto di retention non misurava
+  nulla, perché niente era stato riassunto.
+- **Misura prima di agire**, ricostruendo la lista dei messaggi dalle trace e contandola con
+  lo stesso `token_counter` del middleware, offline e senza spendere una chiamata:
+
+  | | token di conversazione | con system prompt |
+  |---|---|---|
+  | conv_17, 7 turni | 2 892 | ~4 466 |
+  | conv_18, 6 turni | 2 374 | ~3 948 |
+
+  Contro una soglia di 8 000. **La premessa di ADR-056 era sbagliata in modo sostanziale**:
+  stimava ~1 000 token per turno, la crescita reale è ~600, e alcuni turni ne aggiungono
+  quasi nulla (il settimo di conv_17 ne aggiunge 54). Con 8 000 la summarization scattava
+  intorno al **dodicesimo** turno.
+- **Decisione**: intervento doppio. Soglia **ricalibrata a 6 000** sulla crescita misurata —
+  resta sopra il pavimento di ~2 583 della prima chiamata, quindi non scatta sulle
+  conversazioni brevi, e cade intorno all'ottavo turno — e conversazioni `memory` portate a
+  **10 turni** ciascuna.
+- **Alternative scartate**: allungare a 13 turni lasciando la soglia a 8 000 (farebbe passare
+  la metrica senza correggere la taratura, e metterebbe 26 turni su 56 in due sole
+  conversazioni); solo ricalibrare (le conversazioni resterebbero corte per una categoria che
+  deve dimostrare la memoria lunga); non toccare nulla (la retention continuerebbe a
+  riportare 1.000 senza misurare niente).
+- **Esito**: `summarization fired (memory)` passa a **2/2**, la summarization scatta cinque
+  volte fra le due conversazioni, e i turni di retention recuperano l'entità del primo turno
+  *dopo* il riassunto. `knowledge_retention` **scende** da 1.000 a 0.950 (conv_17 1.0,
+  conv_18 0.9), e questa discesa è il risultato buono: per la prima volta il numero misura il
+  meccanismo che dichiara di misurare.
+- **Riesecuzione parziale, perché i giudici sono la parte cara**: `--only` e `--merge` sul
+  runner, `--only` sulle metriche giudicate, con fusione per conversazione **e metrica** —
+  un modulo che calcola due metriche non deve cancellare quella che non ha ricalcolato. Venti
+  turni rigiocati invece di cinquanta. Un campo `run_label` su ogni trace rende la provenienza
+  delle righe verificabile invece di nasconderla, e ha un default, così le trace scritte prima
+  che esistesse si caricano ancora.
+- **Avvertenza di lettura**: i denominatori sono cambiati (`source recall` da 28 a 35 turni,
+  `tool selection` da 40 a 47), quindi le percentuali su 50 turni **non** sono confrontabili
+  turno per turno con quelle su 43. Il confronto dell'intervento sul prompt resta sui due
+  stati a 43 turni, conservati in `eval/results/before/` e `eval/results/after/`.
+- **Nota su un vecchio difetto ritrovato**: il `.env` locale conteneva ancora
+  `GREENTHUMB_SUMMARY_TRIGGER_TOKENS=8000` e sovrascriveva il nuovo default. È la terza
+  manifestazione del problema di ADR-043: un valore di configurazione copiato una volta e
+  dimenticato continua a vincere sui default calibrati. Il validatore protegge dal basso, non
+  dal disallineamento.
+
+## ADR-073 — Le trace non sono un artefatto rigenerabile, e vanno versionate
+
+- **Contesto**: `.gitignore` elencava `eval/results/traces.jsonl` fra gli «artefatti
+  generati, rigenerabili», accanto a `vector_store/`. Sembra la stessa categoria.
+- **Non lo è**. Il vector store si ricostruisce con `make index`, gratis e identico. Una
+  trace si ricostruisce con ~300 chiamate LLM e **viene diversa**, perché OpenRouter smista
+  fra fornitori a monte (ADR-030). Non è un artefatto di build: è un **verbale di misura**.
+  E SPEC §10.2 promette che le metriche si possono ricalcolare senza rieseguire l'agente —
+  una promessa che vale solo per chi ha il file.
+- **Il danno si è già verificato**: le trace della seconda esecuzione, quella che misura
+  l'effetto dell'intervento sul prompt, **non esistono più**. Non erano committate per via di
+  quella regola, e la riesecuzione parziale le ha sovrascritte. I punteggi restano, le
+  risposte turno per turno no. È documentato in `eval/results/after/README.md` invece di
+  essere lasciato scoprire a chi cerca il file.
+- **Decisione**: rimossa la riga da `.gitignore`, con un commento che spiega perché non va
+  rimessa; `eval/results/traces.jsonl` è versionato (127 KB). Resta ignorato
+  `eval/results/smoke_traces.jsonl`, che è davvero usa-e-getta.
+- **Conseguenze**: chi clona il repository può ricalcolare ogni metrica senza spendere una
+  chiamata, e il notebook di consegna può caricare risultati reali (SPEC §13 punto 8) su un
+  runtime pulito. Lezione generale: «generato» e «rigenerabile» non sono sinonimi, e la
+  differenza si misura in costo e in riproducibilità.

@@ -5,7 +5,11 @@
 # Generated artefacts (rebuilt by `make index` / produced at runtime)
 vector_store/
 escalations.jsonl
-eval/results/traces.jsonl
+# eval/results/traces.jsonl is deliberately NOT here: unlike the vector store it cannot be
+# rebuilt cheaply, and reproducing it costs ~300 LLM calls and yields different content
+# (ADR-030). It is a measurement record, and SPEC 10.2's promise — recompute the metrics
+# without re-running the agent — only holds for whoever has the file (ADR-073).
+eval/results/smoke_traces.jsonl
 
 # Python
 __pycache__/
@@ -27,4 +31,3 @@ hf_cache/
 
 # OS
 .DS_Store
-eval/results/smoke_traces.jsonl

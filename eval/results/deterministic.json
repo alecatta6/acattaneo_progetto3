@@ -1,11 +1,11 @@
 {
-  "turns": 43,
+  "turns": 50,
   "overall": [
     {
       "name": "needs_human accuracy",
-      "value": 0.9534883720930233,
-      "passed": 41,
-      "total": 43,
+      "value": 0.96,
+      "passed": 48,
+      "total": 50,
       "failures": [
         "conv_09#1",
         "conv_19#2"
@@ -13,24 +13,27 @@
     },
     {
       "name": "tool selection accuracy",
-      "value": 0.825,
-      "passed": 33,
-      "total": 40,
+      "value": 0.7872340425531915,
+      "passed": 37,
+      "total": 47,
       "failures": [
         "conv_06#2",
         "conv_15#2",
         "conv_16#1",
         "conv_16#2",
         "conv_16#3",
-        "conv_17#2",
+        "conv_17#4",
+        "conv_17#9",
+        "conv_18#3",
+        "conv_18#6",
         "conv_19#2"
       ]
     },
     {
       "name": "source recall",
-      "value": 0.6071428571428571,
-      "passed": 17,
-      "total": 28,
+      "value": 0.5428571428571428,
+      "passed": 19,
+      "total": 35,
       "failures": [
         "conv_02#2",
         "conv_06#2",
@@ -41,33 +44,35 @@
         "conv_16#3",
         "conv_17#2",
         "conv_17#3",
+        "conv_17#4",
+        "conv_17#7",
+        "conv_17#9",
         "conv_18#2",
-        "conv_18#3"
+        "conv_18#3",
+        "conv_18#5",
+        "conv_18#6"
       ]
     },
     {
       "name": "schema validity",
       "value": 1.0,
-      "passed": 43,
-      "total": 43,
+      "passed": 50,
+      "total": 50,
       "failures": []
     },
     {
       "name": "answered without fallback",
       "value": 1.0,
-      "passed": 43,
-      "total": 43,
+      "passed": 50,
+      "total": 50,
       "failures": []
     },
     {
       "name": "summarization fired (memory)",
-      "value": 0.0,
-      "passed": 0,
+      "value": 1.0,
+      "passed": 2,
       "total": 2,
-      "failures": [
-        "conv_17#7",
-        "conv_18#6"
-      ]
+      "failures": []
     }
   ],
   "by_category": {
@@ -225,54 +230,59 @@
       {
         "name": "needs_human accuracy",
         "value": 1.0,
-        "passed": 13,
-        "total": 13,
+        "passed": 20,
+        "total": 20,
         "failures": []
       },
       {
         "name": "tool selection accuracy",
-        "value": 0.9090909090909091,
-        "passed": 10,
-        "total": 11,
+        "value": 0.7777777777777778,
+        "passed": 14,
+        "total": 18,
         "failures": [
-          "conv_17#2"
+          "conv_17#4",
+          "conv_17#9",
+          "conv_18#3",
+          "conv_18#6"
         ]
       },
       {
         "name": "source recall",
-        "value": 0.5,
-        "passed": 4,
-        "total": 8,
+        "value": 0.4,
+        "passed": 6,
+        "total": 15,
         "failures": [
           "conv_17#2",
           "conv_17#3",
+          "conv_17#4",
+          "conv_17#7",
+          "conv_17#9",
           "conv_18#2",
-          "conv_18#3"
+          "conv_18#3",
+          "conv_18#5",
+          "conv_18#6"
         ]
       },
       {
         "name": "schema validity",
         "value": 1.0,
-        "passed": 13,
-        "total": 13,
+        "passed": 20,
+        "total": 20,
         "failures": []
       },
       {
         "name": "answered without fallback",
         "value": 1.0,
-        "passed": 13,
-        "total": 13,
+        "passed": 20,
+        "total": 20,
         "failures": []
       },
       {
         "name": "summarization fired (memory)",
-        "value": 0.0,
-        "passed": 0,
+        "value": 1.0,
+        "passed": 2,
         "total": 2,
-        "failures": [
-          "conv_17#7",
-          "conv_18#6"
-        ]
+        "failures": []
       }
     ],
     "multi_tool": [

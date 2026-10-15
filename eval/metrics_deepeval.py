@@ -25,6 +25,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from eval import partial
 from eval.judges import configure_deepeval
 from eval.runner import RESULTS_DIR, TRACES_PATH
 from eval.traces import TurnTrace, load_traces
@@ -270,60 +271,30 @@ def score_traces(traces: Sequence[TurnTrace]) -> list[ItemScore]:
     ]
 
 
-def aggregate(scores: Sequence[ItemScore]) -> dict[str, dict[str, object]]:
-    """Average each metric overall and per category.
-
-    Args:
-        scores: The per-item scores.
-
-    Returns:
-        For each metric, its mean, the number of items averaged, the number missing, and
-        the per-category means.
-    """
-    summary: dict[str, dict[str, object]] = {}
-    for metric in sorted({score.metric for score in scores}):
-        rows = [score for score in scores if score.metric == metric]
-        usable = [score.value for score in rows if score.value is not None]
-        by_category: dict[str, float] = {}
-        for category in sorted({score.category for score in rows}):
-            values = [
-                score.value
-                for score in rows
-                if score.category == category and score.value is not None
-            ]
-            if values:
-                by_category[category] = sum(values) / len(values)
-        summary[metric] = {
-            "mean": (sum(usable) / len(usable)) if usable else None,
-            "items": len(usable),
-            "missing": len(rows) - len(usable),
-            "by_category": by_category,
-        }
-    return summary
-
-
 def main() -> None:
-    """Score the saved traces with DeepEval and write the results."""
+    """Score the saved traces with DeepEval and write the results.
+
+    With ``--only`` it scores just those conversations and merges the result into the
+    existing score file, which is what makes re-running two conversations cheap (ADR-072).
+    """
+    args = partial.parse_args("Score the saved traces with DeepEval.")
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     traces = load_traces(TRACES_PATH)
-    scores = score_traces(traces)
-    summary = aggregate(scores)
+    selected = partial.select(traces, args.only)
+    scores = score_traces(selected)
+    rows = partial.merge_rows(SCORES_PATH, "items", scores)
+    summary = partial.aggregate_rows(rows, "items")
 
     SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
     SCORES_PATH.write_text(
-        json.dumps(
-            {"summary": summary, "items": [score.to_dict() for score in scores]},
-            ensure_ascii=False,
-            indent=2,
-        )
-        + "\n",
+        json.dumps({"summary": summary, "items": rows}, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
 
     for metric, row in summary.items():
         mean = row["mean"]
         shown = "n/d" if mean is None else f"{mean:.3f}"
-        print(f"{metric:34s} {shown:>8s}  ({row['items']} item, {row['missing']} mancanti)")
+        print(f"{metric:34s} {shown:>8s}  ({row['items']}, {row['missing']} mancanti)")
     print(f"\nScritto {SCORES_PATH}")
 
 

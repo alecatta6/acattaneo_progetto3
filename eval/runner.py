@@ -16,9 +16,10 @@ import argparse
 import logging
 import pathlib
 import tempfile
+from collections.abc import Sequence
 
 from eval.dataset import Conversation, load_conversations
-from eval.traces import TurnTrace, write_traces
+from eval.traces import TurnTrace, load_traces, merge_traces, write_traces
 from greenthumb.config import REPO_ROOT, Settings, get_settings
 from greenthumb.escalations_repository import EscalationsRepository
 from greenthumb.service import ChatService, build_chat_service, new_session_id
@@ -29,12 +30,15 @@ RESULTS_DIR = REPO_ROOT / "eval" / "results"
 TRACES_PATH = RESULTS_DIR / "traces.jsonl"
 
 
-def replay_conversation(service: ChatService, conversation: Conversation) -> list[TurnTrace]:
+def replay_conversation(
+    service: ChatService, conversation: Conversation, run_label: str = "main"
+) -> list[TurnTrace]:
     """Replay one conversation in a fresh session.
 
     Args:
         service: The chat service under evaluation.
         conversation: The conversation to replay.
+        run_label: Provenance label recorded on every trace of this replay.
 
     Returns:
         One trace per turn, in order.
@@ -49,6 +53,7 @@ def replay_conversation(service: ChatService, conversation: Conversation) -> lis
                 category=conversation.category,
                 turn_index=index,
                 session_id=session_id,
+                run_label=run_label,
                 user=turn.user,
                 reference_answer=turn.reference_answer,
                 expected_sources=turn.expected_sources,
@@ -81,18 +86,23 @@ def replay_conversation(service: ChatService, conversation: Conversation) -> lis
 
 def run(
     settings: Settings | None = None,
-    only: str | None = None,
+    only: Sequence[str] | None = None,
     traces_path: pathlib.Path | None = None,
+    merge: bool = False,
+    run_label: str = "main",
 ) -> list[TurnTrace]:
-    """Replay the whole dataset, or one conversation of it.
+    """Replay the whole dataset, or some conversations of it.
 
     Args:
         settings: Runtime configuration; read from the environment when omitted.
-        only: A ``conversation_id`` to replay alone, for a cheap smoke run.
+        only: ``conversation_id`` values to replay alone, for a cheap partial run.
         traces_path: Where to write the traces; defaults to ``eval/results/traces.jsonl``.
+        merge: With ``only``, splice the new traces into the existing file instead of
+            replacing it, so the conversations that were not replayed are kept.
+        run_label: Provenance label recorded on every trace of this replay.
 
     Returns:
-        Every trace produced.
+        Every trace written, including the ones carried over by a merge.
 
     Raises:
         SystemExit: If ``only`` names a conversation the dataset does not contain.
@@ -100,9 +110,11 @@ def run(
     settings = settings or get_settings()
     conversations = load_conversations()
     if only is not None:
-        conversations = [c for c in conversations if c.conversation_id == only]
-        if not conversations:
-            raise SystemExit(f"Nessuna conversazione con id {only!r}")
+        wanted = set(only)
+        conversations = [c for c in conversations if c.conversation_id in wanted]
+        missing = wanted - {c.conversation_id for c in conversations}
+        if missing:
+            raise SystemExit(f"Nessuna conversazione con id {sorted(missing)}")
 
     # A register of this run only: needs_human must reflect this replay (ADR-065).
     with tempfile.TemporaryDirectory(prefix="greenthumb-eval-") as directory:
@@ -111,10 +123,18 @@ def run(
         traces = [
             trace
             for conversation in conversations
-            for trace in replay_conversation(service, conversation)
+            for trace in replay_conversation(service, conversation, run_label)
         ]
 
     destination = traces_path or TRACES_PATH
+    if merge and destination.exists():
+        previous = load_traces(destination)
+        traces = merge_traces(previous, traces)
+        logger.info(
+            "Fuse nelle trace esistenti: %d conversazioni rigiocate, %d turni totali",
+            len(conversations),
+            len(traces),
+        )
     written = write_traces(destination, traces)
     logger.info("Scritte %d trace in %s", written, destination)
     return traces
@@ -126,7 +146,18 @@ def main() -> None:
     parser.add_argument(
         "--only",
         metavar="CONVERSATION_ID",
-        help="replay a single conversation (cheap smoke run)",
+        nargs="+",
+        help="replay only these conversations (cheap partial run)",
+    )
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="with --only, splice into the existing traces instead of replacing them",
+    )
+    parser.add_argument(
+        "--label",
+        default="main",
+        help="provenance label recorded on every trace of this replay",
     )
     parser.add_argument(
         "--out",
@@ -136,7 +167,7 @@ def main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    traces = run(only=args.only, traces_path=args.out)
+    traces = run(only=args.only, traces_path=args.out, merge=args.merge, run_label=args.label)
     conversations = len({trace.conversation_id for trace in traces})
     print(f"\n{len(traces)} turni su {conversations} conversazioni.")
 

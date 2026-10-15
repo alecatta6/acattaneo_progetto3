@@ -1,0 +1,461 @@
+{
+  "turns": 43,
+  "overall": [
+    {
+      "name": "needs_human accuracy",
+      "value": 0.9534883720930233,
+      "passed": 41,
+      "total": 43,
+      "failures": [
+        "conv_09#1",
+        "conv_19#2"
+      ]
+    },
+    {
+      "name": "tool selection accuracy",
+      "value": 0.825,
+      "passed": 33,
+      "total": 40,
+      "failures": [
+        "conv_06#2",
+        "conv_15#2",
+        "conv_16#1",
+        "conv_16#2",
+        "conv_16#3",
+        "conv_17#2",
+        "conv_19#2"
+      ]
+    },
+    {
+      "name": "source recall",
+      "value": 0.6071428571428571,
+      "passed": 17,
+      "total": 28,
+      "failures": [
+        "conv_02#2",
+        "conv_06#2",
+        "conv_09#1",
+        "conv_15#2",
+        "conv_16#1",
+        "conv_16#2",
+        "conv_16#3",
+        "conv_17#2",
+        "conv_17#3",
+        "conv_18#2",
+        "conv_18#3"
+      ]
+    },
+    {
+      "name": "schema validity",
+      "value": 1.0,
+      "passed": 43,
+      "total": 43,
+      "failures": []
+    },
+    {
+      "name": "answered without fallback",
+      "value": 1.0,
+      "passed": 43,
+      "total": 43,
+      "failures": []
+    },
+    {
+      "name": "summarization fired (memory)",
+      "value": 0.0,
+      "passed": 0,
+      "total": 2,
+      "failures": [
+        "conv_17#7",
+        "conv_18#6"
+      ]
+    }
+  ],
+  "by_category": {
+    "agronomic_advice": [
+      {
+        "name": "needs_human accuracy",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 0.75,
+        "passed": 3,
+        "total": 4,
+        "failures": [
+          "conv_06#2"
+        ]
+      },
+      {
+        "name": "source recall",
+        "value": 0.75,
+        "passed": 3,
+        "total": 4,
+        "failures": [
+          "conv_06#2"
+        ]
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      }
+    ],
+    "edge_cases": [
+      {
+        "name": "needs_human accuracy",
+        "value": 0.75,
+        "passed": 3,
+        "total": 4,
+        "failures": [
+          "conv_19#2"
+        ]
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 0.6666666666666666,
+        "passed": 2,
+        "total": 3,
+        "failures": [
+          "conv_19#2"
+        ]
+      },
+      {
+        "name": "source recall",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      }
+    ],
+    "escalation": [
+      {
+        "name": "needs_human accuracy",
+        "value": 1.0,
+        "passed": 8,
+        "total": 8,
+        "failures": []
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 0.5,
+        "passed": 4,
+        "total": 8,
+        "failures": [
+          "conv_15#2",
+          "conv_16#1",
+          "conv_16#2",
+          "conv_16#3"
+        ]
+      },
+      {
+        "name": "source recall",
+        "value": 0.2,
+        "passed": 1,
+        "total": 5,
+        "failures": [
+          "conv_15#2",
+          "conv_16#1",
+          "conv_16#2",
+          "conv_16#3"
+        ]
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 8,
+        "total": 8,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 8,
+        "total": 8,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      }
+    ],
+    "memory": [
+      {
+        "name": "needs_human accuracy",
+        "value": 1.0,
+        "passed": 13,
+        "total": 13,
+        "failures": []
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 0.9090909090909091,
+        "passed": 10,
+        "total": 11,
+        "failures": [
+          "conv_17#2"
+        ]
+      },
+      {
+        "name": "source recall",
+        "value": 0.5,
+        "passed": 4,
+        "total": 8,
+        "failures": [
+          "conv_17#2",
+          "conv_17#3",
+          "conv_18#2",
+          "conv_18#3"
+        ]
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 13,
+        "total": 13,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 13,
+        "total": 13,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": 0.0,
+        "passed": 0,
+        "total": 2,
+        "failures": [
+          "conv_17#7",
+          "conv_18#6"
+        ]
+      }
+    ],
+    "multi_tool": [
+      {
+        "name": "needs_human accuracy",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "source recall",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      }
+    ],
+    "order_status": [
+      {
+        "name": "needs_human accuracy",
+        "value": 1.0,
+        "passed": 3,
+        "total": 3,
+        "failures": []
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 1.0,
+        "passed": 3,
+        "total": 3,
+        "failures": []
+      },
+      {
+        "name": "source recall",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 3,
+        "total": 3,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 3,
+        "total": 3,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      }
+    ],
+    "product_info": [
+      {
+        "name": "needs_human accuracy",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "source recall",
+        "value": 0.75,
+        "passed": 3,
+        "total": 4,
+        "failures": [
+          "conv_02#2"
+        ]
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 4,
+        "total": 4,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      }
+    ],
+    "returns_policy": [
+      {
+        "name": "needs_human accuracy",
+        "value": 0.6666666666666666,
+        "passed": 2,
+        "total": 3,
+        "failures": [
+          "conv_09#1"
+        ]
+      },
+      {
+        "name": "tool selection accuracy",
+        "value": 1.0,
+        "passed": 3,
+        "total": 3,
+        "failures": []
+      },
+      {
+        "name": "source recall",
+        "value": 0.6666666666666666,
+        "passed": 2,
+        "total": 3,
+        "failures": [
+          "conv_09#1"
+        ]
+      },
+      {
+        "name": "schema validity",
+        "value": 1.0,
+        "passed": 3,
+        "total": 3,
+        "failures": []
+      },
+      {
+        "name": "answered without fallback",
+        "value": 1.0,
+        "passed": 3,
+        "total": 3,
+        "failures": []
+      },
+      {
+        "name": "summarization fired (memory)",
+        "value": null,
+        "passed": 0,
+        "total": 0,
+        "failures": []
+      }
+    ]
+  }
+}

@@ -1,14 +1,14 @@
 {
   "summary": {
     "answer_relevancy": {
-      "mean": 0.8838870431893688,
-      "items": 43,
+      "mean": 0.8886190476190476,
+      "items": 50,
       "missing": 0,
       "by_category": {
         "agronomic_advice": 0.8958333333333334,
         "edge_cases": 0.625,
         "escalation": 0.91875,
-        "memory": 0.9120879120879122,
+        "memory": 0.9140476190476191,
         "multi_tool": 1.0,
         "order_status": 0.8888888888888888,
         "product_info": 0.95,
@@ -25,11 +25,11 @@
       }
     },
     "knowledge_retention": {
-      "mean": 1.0,
+      "mean": 0.95,
       "items": 2,
       "missing": 0,
       "by_category": {
-        "memory": 1.0
+        "memory": 0.95
       }
     }
   },
@@ -243,110 +243,6 @@
       "reason": "Great job! The score is 1.00 because all statements in the output are relevant and directly address the input question."
     },
     {
-      "conversation_id": "conv_17",
-      "turn_index": 1,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 0.8571428571428571,
-      "reason": "The score is 0.86 because while the response mostly addressed the order status, it included irrelevant information about how to plant the ordered bulbs, which was not requested. This extra detail reduced the overall relevancy."
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 2,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "The score is 1.00 because the response was fully relevant and addressed the question directly—great job staying focused!"
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 3,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "The score is 1.00 because the response was fully relevant and addressed the question directly. Great job staying on topic!"
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 4,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "Great job! The score is 1.00 because all statements in the output are relevant and directly address the input question."
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 5,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "Great job! The score is 1.00 because the answer was fully relevant and addressed the question without any irrelevant information."
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 6,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "The score is 1.00 because the answer was fully relevant and addressed the question directly without any irrelevant information. Great job!"
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 7,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's request without any irrelevant information."
-    },
-    {
-      "conversation_id": "conv_18",
-      "turn_index": 1,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 0.8333333333333334,
-      "reason": "The score is 0.83 because, although the response addressed the order update, it included irrelevant information about how to grow the ordered products, which was not related to the delivery update requested."
-    },
-    {
-      "conversation_id": "conv_18",
-      "turn_index": 2,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 0.6666666666666666,
-      "reason": "The score is 0.67 because while the answer partially addresses the question about sowing misticanza, it includes irrelevant information about irrigation practices and mold prevention, which do not directly answer the user's query. However, it still provides some relevant information, which is why the score is not lower."
-    },
-    {
-      "conversation_id": "conv_18",
-      "turn_index": 3,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "The score is 1.00 because the response was fully relevant and directly addressed the input without any irrelevant statements. Great job staying focused!"
-    },
-    {
-      "conversation_id": "conv_18",
-      "turn_index": 4,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 0.5,
-      "reason": "The score is 0.50 because the output included several statements about planting depth, bulb orientation, and planting results, which are not directly relevant to answering when to plant narcissus bulbs. However, some relevant information was still provided, justifying the current score."
-    },
-    {
-      "conversation_id": "conv_18",
-      "turn_index": 5,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's request without any irrelevant information."
-    },
-    {
-      "conversation_id": "conv_18",
-      "turn_index": 6,
-      "category": "memory",
-      "metric": "answer_relevancy",
-      "value": 1.0,
-      "reason": "Great job! The score is 1.00 because all statements in the output were directly relevant to the input, with no irrelevant information included."
-    },
-    {
       "conversation_id": "conv_19",
       "turn_index": 1,
       "category": "edge_cases",
@@ -476,19 +372,179 @@
     },
     {
       "conversation_id": "conv_17",
+      "turn_index": 1,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the input without any irrelevant statements."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly, with no irrelevant information included."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.8333333333333334,
+      "reason": "The score is 0.83 because, while the answer mostly addresses the type of soil needed, it also includes information about the characteristics of the pot, which is not directly relevant to the question about soil. This extra detail prevents a higher score, but the main response is still focused on the user's query."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.6,
+      "reason": "The score is 0.60 because the answer includes information about wind exposure and soil humidity, which are not directly relevant to whether the pot should be kept outside in winter. However, some relevant information is still provided, justifying the current score."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 5,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output are relevant and directly address the question about watering during winter."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 6,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 7,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output were relevant and directly addressed the input question."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 8,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output are relevant and directly address the input without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 9,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the input without any irrelevant statements."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 10,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.7142857142857143,
+      "reason": "The score is 0.71 because the response included information about the order being shipped and the shipping method, which are not directly relevant to the user's request for the order number and arrival date. However, the answer is still somewhat relevant as it pertains to the order status."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 1,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output were relevant and directly addressed the input with no irrelevant information."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.6666666666666666,
+      "reason": "The score is 0.67 because, while the answer partially addresses the question about when to sow misticanza, it includes irrelevant details about the type of soil to use, which are not directly related to the timing of sowing. These extra details prevent the score from being higher."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and directly addressed the input without any irrelevant statements. Great job staying focused!"
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.6666666666666666,
+      "reason": "The score is 0.67 because the answer included details about how to plant narcissus bulbs (such as planting depth and bulb orientation), which are not directly relevant to the question about when to plant them. However, some relevant information was still provided, which is why the score is not lower."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 5,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output are directly relevant to the question about the height at which to cut misticanza leaves."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 6,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 7,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 8,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.8,
+      "reason": "The score is 0.80 because, although the response partially addresses the input, it includes a statement about the taste of carrots after frost, which is not relevant to the user's question about when to sow the carrots."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 9,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's request without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 10,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output were directly relevant to the input, with no irrelevant information present."
+    },
+    {
+      "conversation_id": "conv_17",
       "turn_index": null,
       "category": "memory",
       "metric": "knowledge_retention",
       "value": 1.0,
-      "reason": "The score is 1.00 because there are no attritions listed, indicating no instances of forgetfulness or loss of previously established knowledge in the LLM response."
+      "reason": "The score is 1.00 because there are no attritions, indicating no instances of forgetfulness or loss of previously established knowledge in the LLM's responses."
     },
     {
       "conversation_id": "conv_18",
       "turn_index": null,
       "category": "memory",
       "metric": "knowledge_retention",
-      "value": 1.0,
-      "reason": "The score is 1.00 because there are no attritions, indicating no instances of forgetfulness or loss of previously established knowledge in the LLM response."
+      "value": 0.9,
+      "reason": "The score is 0.90 because the LLM response contradicts previously established knowledge by listing 8 items (2+3+3) instead of the correct total of 3 items for order 1047, indicating a minor lapse in knowledge retention."
     }
   ]
 }
