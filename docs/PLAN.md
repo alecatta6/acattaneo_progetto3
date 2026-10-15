@@ -164,7 +164,7 @@ DoD:
 
 ---
 
-## [ ] Fase 8 — API
+## [x] Fase 8 — API ✅ completata
 
 **Obiettivo**: agente esposto via FastAPI con istruzioni di avvio.
 

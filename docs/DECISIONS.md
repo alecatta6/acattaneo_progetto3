@@ -1539,3 +1539,39 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   chiamata, e il notebook di consegna può caricare risultati reali (SPEC §13 punto 8) su un
   runtime pulito. Lezione generale: «generato» e «rigenerabile» non sono sinonimi, e la
   differenza si misura in costo e in riproducibilità.
+
+## ADR-074 — L'API tiene il contratto a quattro campi anche quando qualcosa si rompe
+
+- **Contesto**: SPEC §11 fissa il corpo di `POST /chat` a **esattamente** i quattro campi di
+  `ChatResponse`, come nell'esempio della traccia. Tutto ciò che il chiamante ha comunque
+  bisogno di sapere non può quindi stare nel corpo.
+- **Decisione**: due header. `X-Session-Id` restituisce la conversazione, generata dal server
+  quando il client non la fornisce; `X-Fallback: true` segnala il ripiego su guasto del
+  provider (ADR-009). Un test asserisce `set(body) == {"answer", "confidence", "sources",
+  "needs_human"}`: un campo in più romperebbe il contratto quanto una risposta sbagliata, e
+  l'uguaglianza fra insiemi è l'unica asserzione che lo cattura.
+- **Tre scelte di comportamento sui casi non nominali**:
+  - **`extra="forbid"` sul corpo della richiesta.** Un `sessionId` scritto in camelCase
+    sarebbe altrimenti ignorato in silenzio, e il cliente perderebbe la conversazione senza
+    alcun errore. Meglio un 422 che nomina il campo.
+  - **`DELETE` su una sessione inesistente restituisce 204, non 404.** L'intenzione del
+    chiamante è che la conversazione non esista più, e non esiste. Un 404 lo costringerebbe a
+    distinguere due casi che per lui sono lo stesso.
+  - **Un gestore d'eccezioni generale restituisce il contratto, non un 500.** `ChatService`
+    cattura già i guasti del provider (ADR-009), quindi arrivare qui significa che si è rotto
+    qualcosa di più esterno. Il cliente riceve comunque quattro campi, `needs_human=true` e
+    l'header di ripiego; l'operatore riceve il traceback nel log.
+- **Il `lifespan` costruisce l'agente una volta**, perché caricare `multilingual-e5-base`
+  richiede secondi: farlo per richiesta renderebbe l'API inutilizzabile. I test lo aggirano
+  iniettando un servizio finto in `app.state` prima dell'avvio, quindi **nessuno dei sedici
+  test dell'API chiama un modello**.
+- **Verifica end-to-end**, con il server vero e i `curl` del README: `/health` risponde `ok`
+  con data di business 2026-10-12; l'esempio della traccia risponde a **entrambe** le parti
+  della domanda con `sources: ["guides/bulbi_autunnali.md"]` e `confidence: high`; il
+  multi-turn risolve «quelli dell'ordine di prima» nei giacinti dell'ordine 1046, cioè la
+  memoria di sessione funziona attraverso HTTP; `DELETE` dà 204 e un messaggio vuoto dà 422.
+- **Osservazione che sopravvive alla fase 7**: alla domanda «posso piantare **adesso** i bulbi
+  di tulipano?» con business date 12 ottobre, l'agente risponde «le consiglio di attendere
+  qualche giorno». È la prudenza già registrata in ADR-053, che l'intervento sull'escalation
+  non ha toccato — e non doveva: quell'intervento aveva un altro bersaglio. Resta il candidato
+  naturale per un secondo intervento misurato, se se ne farà uno.
