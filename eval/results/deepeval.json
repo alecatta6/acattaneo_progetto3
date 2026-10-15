@@ -1,0 +1,494 @@
+{
+  "summary": {
+    "answer_relevancy": {
+      "mean": 0.9083056478405316,
+      "items": 43,
+      "missing": 0,
+      "by_category": {
+        "agronomic_advice": 0.9,
+        "edge_cases": 0.6083333333333333,
+        "escalation": 0.9375,
+        "memory": 0.924908424908425,
+        "multi_tool": 1.0,
+        "order_status": 1.0,
+        "product_info": 1.0,
+        "returns_policy": 0.8333333333333334
+      }
+    },
+    "escalation_correctness": {
+      "mean": 0.6916666666666668,
+      "items": 12,
+      "missing": 0,
+      "by_category": {
+        "edge_cases": 0.65,
+        "escalation": 0.7125
+      }
+    },
+    "knowledge_retention": {
+      "mean": 1.0,
+      "items": 2,
+      "missing": 0,
+      "by_category": {
+        "memory": 1.0
+      }
+    }
+  },
+  "items": [
+    {
+      "conversation_id": "conv_01",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the output was fully relevant and addressed the user's questions directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_02",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_02",
+      "turn_index": 2,
+      "category": "product_info",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_03",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the answer is fully relevant and directly addresses both the NPK ratio and the reason for low nitrogen, with no irrelevant information included. Great job!"
+    },
+    {
+      "conversation_id": "conv_04",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_05",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the user's question directly without any irrelevant information. Great job!"
+    },
+    {
+      "conversation_id": "conv_06",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed your question perfectly. Great job!"
+    },
+    {
+      "conversation_id": "conv_06",
+      "turn_index": 2,
+      "category": "agronomic_advice",
+      "metric": "answer_relevancy",
+      "value": 0.6,
+      "reason": "The score is 0.60 because the answer includes information about planting periods and the need to keep pots outdoors, which does not directly address whether spring bulbs can thrive with little light. However, some relevant information is present, so the score is not lower."
+    },
+    {
+      "conversation_id": "conv_07",
+      "turn_index": 1,
+      "category": "order_status",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_08",
+      "turn_index": 1,
+      "category": "order_status",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output were relevant and directly addressed the input."
+    },
+    {
+      "conversation_id": "conv_08",
+      "turn_index": 2,
+      "category": "order_status",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the input directly with no irrelevant statements."
+    },
+    {
+      "conversation_id": "conv_09",
+      "turn_index": 1,
+      "category": "returns_policy",
+      "metric": "answer_relevancy",
+      "value": 0.5,
+      "reason": "The score is 0.50 because the answer included irrelevant details about customer service hours and Saturday availability, which do not address the question about returning the seed packet after ten days. However, some relevant information was likely provided, which is why the score is not lower."
+    },
+    {
+      "conversation_id": "conv_10",
+      "turn_index": 1,
+      "category": "returns_policy",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_10",
+      "turn_index": 2,
+      "category": "returns_policy",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information. Great job!"
+    },
+    {
+      "conversation_id": "conv_11",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all parts of the response were directly relevant to the user's questions, with no irrelevant statements present."
+    },
+    {
+      "conversation_id": "conv_12",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output were relevant and directly addressed the user's question."
+    },
+    {
+      "conversation_id": "conv_13",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_13",
+      "turn_index": 2,
+      "category": "multi_tool",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_14",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's request without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_14",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the question directly. Great job staying on topic!"
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the question directly. Great job staying on topic!"
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 0.6666666666666666,
+      "reason": "The score is 0.67 because the answer included irrelevant details about customer service opening hours, which do not address the user's request for a refund after 14 days. However, the response still partially addressed the main concern, which is why the score is not lower."
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 3,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's concern without any irrelevant statements."
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the user's concern directly. Great job staying focused on the question!"
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 0.8333333333333334,
+      "reason": "The score is 0.83 because, while the response mostly addresses the issue of the moldy bulbs, it includes a generic offer of further assistance that doesn't directly relate to the specific problem or its resolution."
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 3,
+      "category": "escalation",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output are relevant and directly address the input question."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 1,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.8571428571428571,
+      "reason": "The score is 0.86 because, while the response addressed the order, it also included advice on planting bulbs, which was not relevant to the user's inquiry about their order status. The score isn't higher due to this off-topic information, but it still reflects a mostly relevant answer."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly, with no irrelevant statements."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the question directly. Great job!"
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information. Great job staying focused!"
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 5,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the answer was fully relevant and addressed the question without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 6,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the question directly without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 7,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output were relevant and directly addressed the user's request."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 1,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because all statements in the output are relevant and directly address the input with no irrelevant information."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.6666666666666666,
+      "reason": "The score is 0.67 because, while the answer partially addresses whether misticanza can be sown now, it includes irrelevant information about irrigation practices and mold prevention, which do not directly answer the question. The score is not lower because some relevant information is still provided."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and directly addressed the input without any irrelevant statements. Great job staying focused!"
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 0.5,
+      "reason": "The score is 0.50 because the output included information about planting depth, bulb orientation, and planting results, which are not directly relevant to answering when to plant the bulbs. However, some relevant information was still provided, which is why the score is not lower."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 5,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "Great job! The score is 1.00 because the response was fully relevant and addressed the user's request without any irrelevant information."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 6,
+      "category": "memory",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the input directly without any irrelevant information. Great job staying focused!"
+    },
+    {
+      "conversation_id": "conv_19",
+      "turn_index": 1,
+      "category": "edge_cases",
+      "metric": "answer_relevancy",
+      "value": 1.0,
+      "reason": "The score is 1.00 because the response was fully relevant and addressed the user's question directly. Great job staying focused!"
+    },
+    {
+      "conversation_id": "conv_19",
+      "turn_index": 2,
+      "category": "edge_cases",
+      "metric": "answer_relevancy",
+      "value": 0.6,
+      "reason": "The score is 0.60 because, although the response addresses the order number, it includes irrelevant details about customer service hours and Saturday availability, which do not pertain to confirming the order number. The score is not lower because the main topic is still partially addressed."
+    },
+    {
+      "conversation_id": "conv_20",
+      "turn_index": 1,
+      "category": "edge_cases",
+      "metric": "answer_relevancy",
+      "value": 0.5,
+      "reason": "The score is 0.50 because the response included information about gardening products and GreenThumb store services, which are irrelevant to the request for a restaurant recommendation in Milan. However, it may have contained some partially related or neutral content, preventing a lower score."
+    },
+    {
+      "conversation_id": "conv_20",
+      "turn_index": 2,
+      "category": "edge_cases",
+      "metric": "answer_relevancy",
+      "value": 0.3333333333333333,
+      "reason": "The score is 0.33 because the response did not address how to graft an apple tree using the crown method, instead offering unrelated gardening help and product suggestions. It is not lower because it still attempted to provide assistance, but it is not higher due to the lack of direct relevance."
+    },
+    {
+      "conversation_id": "conv_14",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.8,
+      "reason": "L'input richiede esplicitamente il passaggio a un operatore, quindi il passaggio era necessario. L'Actual Output annuncia chiaramente che la richiesta è stata presa in carico, fornisce un riferimento e informa sui tempi di risposta e sugli orari del servizio clienti. Tuttavia, manca l'offerta di un contatto diretto tramite numero di telefono, presente nell'Expected Output. Il tono è cortese e concreto, ma l'informazione sul contatto diretto sarebbe stata utile per allinearsi completamente ai criteri."
+    },
+    {
+      "conversation_id": "conv_14",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.8,
+      "reason": "Il passaggio a un operatore non era necessario, poiché la domanda riguarda semplicemente il costo della spedizione. L'output risponde in modo cortese e concreto, fornendo informazioni chiare sui costi standard e sulla spedizione espressa. Tuttavia, manca il dettaglio relativo alle isole/località montane e al supplemento di 4 euro, presente nell'Expected Output. Nel complesso, la risposta è quasi completa ma non totalmente esaustiva."
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.7,
+      "reason": "L'input non richiede esplicitamente il passaggio a un operatore, ma l'Actual Output lo annuncia comunque, spiegando che la richiesta di reso è fuori policy ma sarà valutata per eccezioni. Questo è un punto di forza perché informa il cliente su cosa aspettarsi, ma non era strettamente necessario secondo i criteri. Il tono è cortese e concreto, ma manca qualche dettaglio specifico presente nell'Expected Output (come il contenuto dell'ordine e il prezzo). Nel complesso, la risposta è corretta ma leggermente troppo orientata al passaggio all'operatore rispetto a quanto richiesto."
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.7,
+      "reason": "L'Actual Output riconosce correttamente che la richiesta di rimborso fuori policy richiede il passaggio a un operatore e annuncia chiaramente la presa in carico, informando sui tempi di risposta e sugli orari del servizio clienti. Tuttavia, manca una spiegazione delle regole sulla policy di rimborso e non rassicura il cliente che la richiesta non viene rifiutata automaticamente, come invece fa l'Expected Output. Il tono è cortese e concreto, ma la risposta è meno trasparente e informativa rispetto all'atteso."
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 3,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.9,
+      "reason": "Il passaggio a un operatore era necessario poiché si tratta di un reclamo. L'Actual Output annuncia chiaramente l'apertura di un ticket e informa il cliente sui tempi e le modalità di contatto, mantenendo un tono cortese e concreto. Tuttavia, manca il riferimento esplicito alla pratica di rimborso già aperta, presente nell'Expected Output, che avrebbe reso la risposta più completa."
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.6,
+      "reason": "L'input riguarda un caso di sicurezza (possibile avvelenamento animale), che richiede il passaggio a un operatore secondo i criteri. L'Actual Output fornisce informazioni corrette e un consiglio urgente di contattare il veterinario, mantenendo un tono cortese e concreto. Tuttavia, manca l'annuncio del passaggio a un operatore e l'informazione su cosa aspettarsi, come richiesto dall'Expected Output. Questo rappresenta una mancanza significativa rispetto alle istruzioni."
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.6,
+      "reason": "L'input riguarda merce danneggiata (bulbi ammuffiti), quindi il passaggio a un operatore o la gestione come reclamo era necessaria. L'Actual Output riconosce il difetto e informa che la richiesta è valida e sarà gestita dal servizio clienti, ma non annuncia chiaramente l'apertura di una segnalazione né spiega cosa aspettarsi come nell'Expected Output. Il tono è cortese e concreto, ma manca la trasparenza sul processo di gestione e la comunicazione esplicita dell'apertura della segnalazione."
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 3,
+      "category": "escalation",
+      "metric": "escalation_correctness",
+      "value": 0.6,
+      "reason": "L'Actual Output risponde cortesemente e concretamente, senza annunciare un passaggio all'operatore, in linea con il fatto che il passaggio non era necessario. Tuttavia, manca la specificità dell'Expected Output: non distingue tra le diverse tipologie di richieste e non spiega cosa significhi 'presa in carico', risultando meno informativo e preciso rispetto alle aspettative."
+    },
+    {
+      "conversation_id": "conv_19",
+      "turn_index": 1,
+      "category": "edge_cases",
+      "metric": "escalation_correctness",
+      "value": 0.8,
+      "reason": "La risposta non richiede il passaggio immediato a un operatore, ma deve prevedere la possibilità se il cliente conferma che il numero è corretto. L'Actual Output è cortese e concreto, chiede la verifica del numero e spiega dove trovarlo, ma manca l'informazione su cosa succede se il numero è corretto (cioè il passaggio all'operatore). Il tono è adeguato e non scarica il problema sul cliente."
+    },
+    {
+      "conversation_id": "conv_19",
+      "turn_index": 2,
+      "category": "edge_cases",
+      "metric": "escalation_correctness",
+      "value": 0.7,
+      "reason": "L'Actual Output annuncia correttamente il passaggio a un operatore, come richiesto dal caso in cui il numero d'ordine non risulta nei sistemi. Tuttavia, manca la spiegazione che il numero non è presente nei sistemi e non informa il cliente che l'operatore cercherà l'ordine anche tramite l'indirizzo email. Il tono è cortese e concreto, ma la risposta è meno trasparente e informativa rispetto all'Expected Output."
+    },
+    {
+      "conversation_id": "conv_20",
+      "turn_index": 1,
+      "category": "edge_cases",
+      "metric": "escalation_correctness",
+      "value": 0.8,
+      "reason": "La risposta non richiedeva il passaggio a un operatore e l'output effettivo non lo annuncia, rispettando il criterio. Il tono è cortese e concreto, spiegando i limiti del servizio e suggerendo alternative. Tuttavia, manca un riferimento esplicito ai servizi offerti (come ordini, resi o consigli di coltivazione) e un invito a chiedere per il giardinaggio, elementi presenti nell'output atteso. Questo rende la risposta leggermente meno completa rispetto all'atteso."
+    },
+    {
+      "conversation_id": "conv_20",
+      "turn_index": 2,
+      "category": "edge_cases",
+      "metric": "escalation_correctness",
+      "value": 0.3,
+      "reason": "L'input richiede il passaggio a un operatore perché la domanda non è coperta dalla documentazione. L'Actual Output riconosce la mancanza di informazioni ma non annuncia il passaggio a un operatore né informa il cliente su cosa aspettarsi, come invece richiesto dall'Expected Output. Il tono è cortese, ma manca la concretezza e la gestione corretta del caso secondo i criteri."
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": null,
+      "category": "memory",
+      "metric": "knowledge_retention",
+      "value": 1.0,
+      "reason": "The score is 1.00 because there are no attritions, indicating no instances of forgetfulness or loss of previously established knowledge in the LLM response."
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": null,
+      "category": "memory",
+      "metric": "knowledge_retention",
+      "value": 1.0,
+      "reason": "The score is 1.00 because there are no attritions listed, indicating no instances of forgetfulness or loss of previously established knowledge in the LLM response."
+    }
+  ]
+}

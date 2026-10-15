@@ -22,12 +22,12 @@ from eval.traces import TurnTrace, load_traces
 logger = logging.getLogger(__name__)
 
 SUMMARY_PATH = RESULTS_DIR / "summary.md"
+# Hand-written prose, included verbatim at the end of the generated report. It lives in
+# its own file because the report is regenerated on every run: prose written into the
+# generated file would be destroyed by the next run, which is a bad place to keep the one
+# part of the report that cannot be computed (ADR-069).
+ANALYSIS_PATH = RESULTS_DIR / "analysis.md"
 WORST_CASES = 3
-
-ANALYSIS_PLACEHOLDER = (
-    "<!-- Analisi da scrivere a mano: per ciascun caso, la causa (retrieval, prompt, "
-    "tool, memoria?) e cosa si e' deciso di fare. -->"
-)
 
 
 def _load_json(path: pathlib.Path) -> dict | None:
@@ -203,10 +203,25 @@ def _worst_cases_section(traces: Sequence[TurnTrace], payloads: Sequence[dict | 
             f"- tool: {trace.tools_invoked or '—'} (attesi {trace.expected_tools or '—'})",
             f"- fonti: {trace.sources or '—'} (attese {trace.expected_sources or '—'})",
             "",
-            ANALYSIS_PLACEHOLDER,
-            "",
         ]
     return lines
+
+
+def _analysis_section() -> list[str]:
+    """Include the hand-written analysis, or say plainly that it is missing.
+
+    Returns:
+        The markdown lines.
+    """
+    if not ANALYSIS_PATH.exists():
+        return [
+            "## Analisi",
+            "",
+            f"_Non ancora scritta: va in `{ANALYSIS_PATH.name}`, che questo report include "
+            "alla fine._",
+            "",
+        ]
+    return [ANALYSIS_PATH.read_text(encoding="utf-8").rstrip(), ""]
 
 
 def build_report(traces_path: pathlib.Path | None = None) -> str:
@@ -230,9 +245,10 @@ def build_report(traces_path: pathlib.Path | None = None) -> str:
         f"Generato da `eval/report.py` il {dt.date.today().isoformat()}. "
         f"{conversations} conversazioni, {len(traces)} turni.",
         "",
-        "I numeri di questo file sono tutti ricavati da `traces.jsonl`, `deterministic.json`, "
-        "`ragas.json` e `deepeval.json`, che stanno in questa stessa cartella: nessuna cifra "
-        "e' stata trascritta a mano.",
+        "Tutto cio' che precede la sezione *Analisi* e' generato: i numeri vengono da "
+        "`traces.jsonl`, `deterministic.json`, `ragas.json` e `deepeval.json`, in questa "
+        "stessa cartella, e nessuna cifra e' stata trascritta a mano. L'analisi, che non si "
+        "puo' calcolare, e' scritta in `analysis.md` e inclusa qui alla fine.",
         "",
     ]
     if deterministic:
@@ -242,14 +258,7 @@ def build_report(traces_path: pathlib.Path | None = None) -> str:
     if deepeval:
         lines += _judged_section("Metriche DeepEval", deepeval, count_key="items")
     lines += _worst_cases_section(traces, [ragas, deepeval])
-    lines += [
-        "## Confronto prima/dopo",
-        "",
-        "<!-- Da compilare dopo la seconda esecuzione: cosa e' stato cambiato, quale "
-        "metrica e' stata scelta PRIMA di vedere i risultati (ADR-046), e come si e' "
-        "mossa. -->",
-        "",
-    ]
+    lines += _analysis_section()
     return "\n".join(lines)
 
 

@@ -348,6 +348,8 @@ def test_the_report_renders_from_the_saved_scores(
     monkeypatch.setattr(report.metrics_ragas, "SCORES_PATH", tmp_path / "absent-ragas.json")
     monkeypatch.setattr(report.metrics_deepeval, "SCORES_PATH", tmp_path / "absent-deepeval.json")
 
+    monkeypatch.setattr(report, "ANALYSIS_PATH", tmp_path / "absent-analysis.md")
+
     text = report.build_report(traces_path=traces_path)
     assert "# Risultati dell'evaluation" in text
     assert "Metriche deterministiche" in text
@@ -356,4 +358,22 @@ def test_the_report_renders_from_the_saved_scores(
     assert "I 3 casi peggiori" in text
     # Sections whose score file is missing are omitted rather than faked.
     assert "Metriche RAGAS" not in text
-    assert "Confronto prima/dopo" in text
+    # A missing analysis is declared as missing, not quietly left out.
+    assert "Non ancora scritta" in text
+
+
+def test_the_report_includes_the_hand_written_analysis(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The analysis lives in its own file so regenerating the report cannot destroy it."""
+    traces_path = tmp_path / "traces.jsonl"
+    write_traces(traces_path, [make_trace()])
+    analysis = tmp_path / "analysis.md"
+    analysis.write_text("## Analisi\n\nLa causa era il prompt.\n", encoding="utf-8")
+
+    monkeypatch.setattr(report, "ANALYSIS_PATH", analysis)
+    for module in (metrics_deterministic, report.metrics_ragas, report.metrics_deepeval):
+        monkeypatch.setattr(module, "SCORES_PATH", tmp_path / "absent.json")
+
+    text = report.build_report(traces_path=traces_path)
+    assert "La causa era il prompt." in text

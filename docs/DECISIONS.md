@@ -1350,3 +1350,71 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   interventi correttivi è il confronto prima/dopo, e la metrica con cui si misura un
   intervento va scelta **prima** di vedere i risultati (ADR-046). Queste due osservazioni
   sono registrate come ipotesi già formulate, non come modifiche già fatte.
+
+## ADR-069 — L'analisi sta in un file che il report include, non dentro il report
+
+- **Contesto**: `eval/results/summary.md` è generato da `eval/report.py`, perché ogni cifra
+  deve venire da un file che chi legge può aprire. SPEC §10.4 chiede però anche l'analisi dei
+  tre casi peggiori e il confronto prima/dopo, che **non si possono calcolare**.
+- **Il difetto della prima stesura**: il generatore inseriva dei segnaposto HTML da riempire
+  a mano. Funziona una volta: la seconda esecuzione del report — e la fase 7 ne prevede
+  almeno due — riscrive il file e **cancella l'analisi**. Il pezzo meno riproducibile del
+  report era custodito nel posto più volatile.
+- **Decisione**: la prosa sta in `eval/results/analysis.md`, versionato e scritto a mano; il
+  report lo include alla fine, verbatim. Se manca, il report lo dichiara mancante invece di
+  omettere la sezione in silenzio.
+- **Alternative scartate**: analisi dentro DECISIONS.md con un rimando (il report consegnato
+  non sarebbe leggibile da solo); report scritto interamente a mano (ogni cifra diventa
+  trascritta, cioè non verificabile); segnaposto più un avviso di non rigenerare (una
+  convenzione che si rompe appena qualcuno rigenera).
+- **Conseguenze**: `make eval` si può rieseguire quante volte serve senza perdere una riga di
+  analisi. Due test coprono entrambi i casi, analisi presente e assente.
+
+## ADR-070 — Prima esecuzione completa: i criteri di escalation sono elencati, non vincolanti
+
+- **Contesto**: prima esecuzione dell'evaluation sulle 20 conversazioni, 43 turni, nessun
+  fallback e nessuna risposta non conforme allo schema.
+
+  | Metrica | Valore |
+  |---|---|
+  | `needs_human accuracy` | 86,0% (37/43) |
+  | `tool selection accuracy` | 82,5% (33/40) |
+  | `source recall` | 50,0% (14/28) |
+  | `schema validity` | 100% (43/43) |
+  | `answered without fallback` | 100% (43/43) |
+  | `summarization fired (memory)` | **0% (0/2)** |
+  | RAGAS Faithfulness | 0.754 (23 turni) |
+  | RAGAS ContextPrecisionWithReference | 0.798 (23 turni) |
+  | DeepEval AnswerRelevancy | 0.908 (43 turni) |
+  | DeepEval GEval escalation | 0.692 (12 turni) |
+  | DeepEval KnowledgeRetention | 1.000 (2 conversazioni) |
+
+- **Diagnosi**: i sei errori su `needs_human` vanno in **due direzioni opposte** — due
+  escalation di troppo su domande di policy a cui la KB risponde (conv_09#1 e conv_13#2
+  hanno aperto un ticket *invece* di rispondere), quattro mancate dove la specifica le
+  impone, fra cui un caso `safety` (conv_16#1, un cane che ingerisce un bulbo) gestito nel
+  merito ma senza ticket e **senza invocare alcun tool**. Una regola applicata al contrario
+  in metà dei casi non è una regola poco seguita: è una regola letta come facoltativa. Nel
+  system prompt i sette criteri sono elencati, non vincolanti.
+- **Il reperto più importante non è il più brutto**: `summarization fired (memory)` vale 0/2
+  e `KnowledgeRetention` vale 1.000. Insieme, dimostrano che la retention perfetta non
+  misura niente, perché la soglia di 8000 token non è mai stata superata — la trappola di
+  ADR-028, ritrovata da una metrica scritta per smascherarla. La stima di ADR-056 («almeno
+  sei turni») era ottimistica sui turni brevi.
+- **Due artefatti di metrica, documentati e non corretti**: `faithfulness` e
+  `context_precision` valgono 0.000 sulla categoria `edge_cases`, perché un rifiuto non
+  contiene affermazioni da sostenere; `answer_relevancy` scende a 0.608 sulla stessa
+  categoria, dove la risposta corretta è non rispondere. Escludere i rifiuti dalle
+  popolazioni sarebbe legittimo, ma deciderlo **dopo** aver visto i numeri è la scelta della
+  metrica a posteriori contro cui ADR-046 mette in guardia. Restano nei numeri come limite
+  dichiarato.
+- **Decisione**: un solo intervento correttivo, sul system prompt, sulla causa comune, con
+  le metriche di giudizio dichiarate **prima** della seconda esecuzione: `needs_human
+  accuracy` primaria, `escalation_correctness` secondaria, `tool selection accuracy` e
+  `answer_relevancy` come guardie di regressione. `source recall` è esclusa dal giudizio
+  perché un terzo dei suoi fallimenti dipende da `expected_sources` troppo stretti del
+  dataset — a conv_06#1 l'agente ha citato una guida diversa che contiene la stessa scala di
+  ore di sole, e la risposta è corretta. Le aspettative **non** sono state allargate a
+  posteriori (ADR-045).
+- **Costo misurato**: una esecuzione completa, agente più tre giudici, è costata circa 300
+  chiamate.
