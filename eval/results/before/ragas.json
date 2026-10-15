@@ -1,0 +1,402 @@
+{
+  "summary": {
+    "context_precision_with_reference": {
+      "mean": 0.798309178705938,
+      "turns": 23,
+      "missing": 0,
+      "by_category": {
+        "agronomic_advice": 0.9583333332833333,
+        "edge_cases": 0.0,
+        "escalation": 0.7777777777444445,
+        "memory": 0.8134920634540344,
+        "multi_tool": 0.7777777777444443,
+        "product_info": 0.7777777777388889,
+        "returns_policy": 0.9166666666208333
+      }
+    },
+    "faithfulness": {
+      "mean": 0.7541925465838509,
+      "turns": 23,
+      "missing": 0,
+      "by_category": {
+        "agronomic_advice": 0.9642857142857143,
+        "edge_cases": 0.0,
+        "escalation": 0.5317460317460317,
+        "memory": 0.823639455782313,
+        "multi_tool": 0.6095238095238095,
+        "product_info": 0.7666666666666666,
+        "returns_policy": 1.0
+      }
+    }
+  },
+  "turns": [
+    {
+      "conversation_id": "conv_02",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "faithfulness",
+      "value": 0.8,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_02",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "context_precision_with_reference",
+      "value": 0.99999999995,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_02",
+      "turn_index": 2,
+      "category": "product_info",
+      "metric": "faithfulness",
+      "value": 0.5,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_02",
+      "turn_index": 2,
+      "category": "product_info",
+      "metric": "context_precision_with_reference",
+      "value": 0.3333333333,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_03",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_03",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "context_precision_with_reference",
+      "value": 0.9999999999666667,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_04",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "faithfulness",
+      "value": 0.8571428571428571,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_04",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "context_precision_with_reference",
+      "value": 0.9999999999666667,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_05",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_05",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "context_precision_with_reference",
+      "value": 0.999999999975,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_06",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_06",
+      "turn_index": 1,
+      "category": "agronomic_advice",
+      "metric": "context_precision_with_reference",
+      "value": 0.8333333332916666,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_06",
+      "turn_index": 2,
+      "category": "agronomic_advice",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_06",
+      "turn_index": 2,
+      "category": "agronomic_advice",
+      "metric": "context_precision_with_reference",
+      "value": 0.9999999999,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_10",
+      "turn_index": 1,
+      "category": "returns_policy",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_10",
+      "turn_index": 1,
+      "category": "returns_policy",
+      "metric": "context_precision_with_reference",
+      "value": 0.99999999995,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_10",
+      "turn_index": 2,
+      "category": "returns_policy",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_10",
+      "turn_index": 2,
+      "category": "returns_policy",
+      "metric": "context_precision_with_reference",
+      "value": 0.8333333332916666,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_11",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "faithfulness",
+      "value": 0.42857142857142855,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_11",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "context_precision_with_reference",
+      "value": 0.9999999999666667,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_12",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "faithfulness",
+      "value": 0.8,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_12",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "context_precision_with_reference",
+      "value": 0.8333333332916666,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_13",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "faithfulness",
+      "value": 0.6,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_13",
+      "turn_index": 1,
+      "category": "multi_tool",
+      "metric": "context_precision_with_reference",
+      "value": 0.499999999975,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_14",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_14",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "context_precision_with_reference",
+      "value": 0.3333333333,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "faithfulness",
+      "value": 0.42857142857142855,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_15",
+      "turn_index": 1,
+      "category": "escalation",
+      "metric": "context_precision_with_reference",
+      "value": 0.9999999999666667,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "faithfulness",
+      "value": 0.16666666666666666,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_16",
+      "turn_index": 2,
+      "category": "escalation",
+      "metric": "context_precision_with_reference",
+      "value": 0.9999999999666667,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 0.8571428571428571,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.8055555555287036,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 0.2,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.49999999995,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 5,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 0.875,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 5,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.5833333333041666,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 6,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 6,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.8055555555287036,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 2,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.99999999995,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 3,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.9999999999666667,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 0.8333333333333334,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_18",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.99999999995,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_20",
+      "turn_index": 2,
+      "category": "edge_cases",
+      "metric": "faithfulness",
+      "value": 0.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_20",
+      "turn_index": 2,
+      "category": "edge_cases",
+      "metric": "context_precision_with_reference",
+      "value": 0.0,
+      "reason": null
+    }
+  ]
+}
