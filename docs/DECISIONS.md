@@ -1418,3 +1418,54 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   posteriori (ADR-045).
 - **Costo misurato**: una esecuzione completa, agente più tre giudici, è costata circa 300
   chiamate.
+
+## ADR-071 — L'intervento correttivo: criteri vincolanti, e i due costi che ha prodotto
+
+- **Contesto**: ADR-070 aveva isolato una causa comune (criteri di escalation letti come
+  facoltativi) e dichiarato le metriche di giudizio **prima** di intervenire, come ADR-046
+  impone: `needs_human accuracy` primaria, `escalation_correctness` secondaria,
+  `tool selection accuracy` e `answer_relevancy` come guardie di regressione.
+- **Intervento**: un solo cambiamento, in `prompts.py`. La sezione sull'escalation diventa
+  **due regole esplicite** — «se la knowledge base risponde, rispondi» e «se il caso ricade
+  in uno di questi criteri, apri il ticket, sempre, anche quando hai già risposto nel
+  merito» — più una riga nella regola di grounding: «cercare viene prima di affermare».
+
+  | Ruolo | Metrica | Prima | Dopo |
+  |---|---|---|---|
+  | Primaria | `needs_human accuracy` | 86,0% (37/43) | **95,3% (41/43)** |
+  | Secondaria | `escalation_correctness` | 0.692 | 0.725 |
+  | Guardia | `tool selection accuracy` | 82,5% | 82,5% |
+  | Guardia | `answer_relevancy` | 0.908 | **0.884** |
+  | Fuori giudizio | `source recall` | 50,0% | 60,7% |
+  | Fuori giudizio | Faithfulness / ContextPrecision | 0.754 / 0.798 | 0.846 / 0.833 |
+
+- **Esito**: cinque dei sei turni che sbagliavano il flag sono corretti, compresi tutti e tre
+  quelli di conv_16 (il caso `safety`, i bulbi ammuffiti, i tempi di presa in carico).
+- **I due costi, dichiarati e non nascosti**:
+  1. **una regressione introdotta da me**: conv_19#2, il secondo tentativo sull'ordine 9999
+     con numero confermato, prima escalava e ora no. Probabile causa: la precisazione «al
+     primo tentativo non escalare», accanto a due regole in grassetto, è stata letta come
+     prevalente anche al secondo tentativo.
+  2. **`answer_relevancy` −0.024**: dove l'agente ora apre un ticket, la risposta tende a
+     diventare *solo* il ticket. Su conv_16#1 la parte informativa sulla tossicità del bulbo,
+     presente nella prima esecuzione, è sparita. Rendere obbligatorio il ticket ha spostato il
+     peso della risposta dal contenuto alla procedura: è la direzione del prossimo intervento,
+     il ticket **in aggiunta** alla risposta e non al posto suo.
+- **Come ho separato l'effetto del prompt dal rumore del fornitore**: OpenRouter smista fra
+  fornitori a monte e il pinning non è implementabile via LiteLLM (ADR-030), quindi due
+  esecuzioni identiche divergono — in questa fase se n'è visto un caso pulito, conv_01#1 che
+  cerca nello smoke run e non cerca nella prima esecuzione completa, a prompt identico. Il
+  criterio è la **direzione**: i cinque turni corretti sono esattamente il bersaglio
+  dell'intervento e si muovono tutti dalla stessa parte; conv_06#2 e conv_17#2 sono invece
+  peggiorati *nel senso contrario* alla modifica (una riga che impone di cercare non può far
+  cercare meno), e vanno quindi attribuiti alla variabilità, non al prompt.
+- **Difetto residuo, non corretto**: conv_09#1 continua ad aprire un ticket su una domanda di
+  policy a cui la KB risponde. Una seconda iterazione è l'ipotesi naturale, ma la fase chiede
+  **un** intervento misurato e lo ha prodotto; accumulare modifiche sullo stesso prompt costa
+  una esecuzione completa per tentativo e porta al sovradattamento su venti conversazioni, a
+  quel punto i numeri salgono e misurano sempre meno.
+- **Conseguenza di metodo**: aver dichiarato le metriche prima ha funzionato come previsto.
+  Fra i numeri disponibili, `faithfulness` (+0.092) e `source recall` (+10,7 pt) sono i più
+  spettacolari, ed entrambi erano **esclusi dal giudizio** — il secondo perché un terzo dei
+  suoi fallimenti dipende da aspettative troppo strette del dataset. Scegliendo la metrica
+  dopo avrei dichiarato un successo più grande misurando in parte il mio stesso ground truth.

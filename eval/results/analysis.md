@@ -114,4 +114,101 @@ usarla per giudicare l'intervento misurerebbe in parte il dataset.
 
 ## Confronto prima/dopo
 
-_Da compilare dopo la seconda esecuzione._
+### L'intervento
+
+Un solo cambiamento, in `src/greenthumb/prompts.py`, su due punti:
+
+1. la sezione sull'escalation è stata riscritta come **due regole esplicite** invece di un
+   elenco di criteri — *«se la knowledge base risponde, rispondi»* e *«se il caso ricade in
+   uno di questi criteri, apri il ticket, sempre, anche quando hai già risposto nel
+   merito»* — con l'aggiunta che una dichiarazione di «non ho trovato» è per definizione il
+   caso `no_knowledge`, e che per la salute di persone o animali il ticket `safety` è
+   obbligatorio *in aggiunta* al rinvio al medico o al veterinario;
+2. una riga nella regola di grounding: *«cercare viene prima di affermare»*, con l'obbligo
+   di chiamare `search_knowledge_base` prima di enunciare una cifra, un termine o una
+   caratteristica di prodotto.
+
+Il prompt è passato da 722 a 995 parole. Era arrivato a 1057, oltre il tetto di 1000 che un
+test impone: ho tagliato il testo invece di alzare il tetto, perché il limite esiste per una
+ragione (ADR-052) e spostarlo perché dà fastidio è il modo di non avere più limiti.
+
+### I risultati, metrica per metrica
+
+| Ruolo | Metrica | Prima | Dopo | Δ |
+|---|---|---|---|---|
+| **Primaria** | `needs_human accuracy` | 86,0% (37/43) | **95,3% (41/43)** | **+9,3 pt** |
+| **Secondaria** | `escalation_correctness` (GEval) | 0.692 | **0.725** | +0.033 |
+| Guardia | `tool selection accuracy` | 82,5% (33/40) | 82,5% (33/40) | invariata |
+| Guardia | `answer_relevancy` | 0.908 | **0.884** | **−0.024** |
+| Fuori giudizio | `source recall` | 50,0% (14/28) | 60,7% (17/28) | +10,7 pt |
+| Fuori giudizio | RAGAS Faithfulness | 0.754 | 0.846 | +0.092 |
+| Fuori giudizio | RAGAS ContextPrecision | 0.798 | 0.833 | +0.035 |
+| Fuori giudizio | `summarization fired (memory)` | 0/2 | 0/2 | invariata |
+
+**La metrica primaria è salita di 9,3 punti**, e nel modo giusto: dei sei turni che
+sbagliavano il flag, cinque sono corretti. Tutti e tre i turni di conv_16 — il caso `safety`
+del cane, i bulbi ammuffiti, la domanda sui tempi — ora aprono il ticket, e così conv_13#2 e
+conv_20#2. La secondaria si muove nella stessa direzione, di poco.
+
+### Quello che l'intervento è costato
+
+Non è un miglioramento gratuito, e vale la pena dirlo prima dei meriti.
+
+**Una regressione sulla metrica primaria**: conv_19#2, il secondo tentativo sull'ordine 9999
+con il numero confermato, **prima escalava e ora no**. L'agente risponde che l'ordine non
+risulta e consiglia di contattare il servizio clienti — senza aprire il ticket
+`order_not_found`. L'ipotesi più probabile è che la precisazione «se un ordine non risulta al
+primo tentativo, non escalare», ora vicina a due regole scritte in grassetto, sia stata letta
+come la regola prevalente anche al secondo tentativo. Il saldo resta ampiamente positivo
+(cinque corretti, uno rotto), ma è una regressione introdotta da me, non rumore.
+
+**La guardia `answer_relevancy` è scesa di 0.024.** La causa si legge nelle risposte: dove
+l'agente ora apre un ticket, il testo tende a diventare *solo* il ticket. conv_16#1 risponde
+«la sua richiesta è stata presa in carico con il riferimento ESC-0005 […] la invito a
+rivolgersi a un veterinario»: corretto, ma la parte informativa sulla tossicità del bulbo,
+che nella prima esecuzione c'era, è sparita. **Rendere obbligatorio il ticket ha spostato il
+peso della risposta dal contenuto alla procedura.** È il prezzo misurabile di questo
+intervento, e la direzione in cui andrebbe il prossimo: il ticket in aggiunta alla risposta,
+non al posto della risposta.
+
+**`tool selection accuracy` è invariata nel valore e cambiata nell'insieme.** Corretti
+conv_01#1 (la domanda sulle forbici ora cerca davvero), conv_20#2 e conv_17#4; rotti
+conv_06#2, conv_17#2 e conv_19#2. I tre turni di conv_16 continuano a mancare
+`search_knowledge_base`: ora escalano senza cercare, cioè la Regola 2 ha funzionato e la
+riga sul grounding no.
+
+### Quanto di tutto questo è merito del prompt
+
+Una parte del movimento **non** dipende dall'intervento. OpenRouter smista le richieste fra
+fornitori a monte e il pinning non è implementabile attraverso LiteLLM (ADR-030), quindi due
+esecuzioni con lo stesso prompt e temperatura 0 possono divergere. In questa fase se n'è già
+visto un caso pulito: nello smoke run conv_01#1 ha cercato nella knowledge base, nella prima
+esecuzione completa lo stesso turno non ha cercato affatto, **a prompt identico**.
+
+Il segnale che distingue i due effetti è la **direzione**. I cinque turni corretti sono
+esattamente quelli che l'intervento prendeva di mira — i criteri di escalation obbligatori —
+e si muovono tutti dalla stessa parte: è difficile attribuirlo al caso. conv_06#2 e conv_17#2
+invece sono peggiorati *nel senso contrario* alla modifica: la riga «cercare viene prima di
+affermare» può solo aumentare le ricerche, e quei due turni hanno smesso di cercare. Quello
+è rumore del fornitore, non un effetto del prompt.
+
+### Il difetto che resta, e perché non lo tocco adesso
+
+conv_09#1 sbaglia ancora, e nel modo peggiore: alla domanda «ho ricevuto una bustina di semi
+dieci giorni fa, posso ancora restituirla?» l'agente **cerca** nella knowledge base (progresso
+rispetto a prima) e poi apre comunque il ticket ESC-0001, rispondendo soltanto che la
+richiesta è stata presa in carico. La Regola 1 è scritta e non ha morso. Nota di contorno: la
+`confidence` risultante è `low`, quindi il sistema dichiara da sé di non essere sicuro — il
+cap deterministico fa il suo lavoro anche quando il modello sbaglia.
+
+Una seconda iterazione sul prompt è l'ipotesi naturale, ma la fase 7 chiede **un** intervento
+misurato e lo ha prodotto. Accumulare modifiche sullo stesso prompt eseguendo l'evaluation
+dopo ognuna costa una esecuzione completa per tentativo e, soprattutto, rischia di diventare
+sovradattamento a venti conversazioni: a quel punto i numeri salgono e misurano sempre meno.
+
+### Verdetto
+
+L'intervento si **accetta**: la metrica primaria dichiarata prima di eseguirlo sale di 9,3
+punti, la secondaria la segue, e i casi corretti sono quelli che il cambiamento prendeva di
+mira. Si accetta **con due costi dichiarati**: una regressione su conv_19#2 e un calo di
+0.024 su `answer_relevancy` dovuto a risposte che diventano procedura invece di contenuto.

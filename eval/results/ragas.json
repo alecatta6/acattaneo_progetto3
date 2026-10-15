@@ -1,35 +1,49 @@
 {
   "summary": {
     "context_precision_with_reference": {
-      "mean": 0.798309178705938,
-      "turns": 23,
+      "mean": 0.8333333332943181,
+      "turns": 22,
       "missing": 0,
       "by_category": {
-        "agronomic_advice": 0.9583333332833333,
-        "edge_cases": 0.0,
-        "escalation": 0.7777777777444445,
-        "memory": 0.8134920634540344,
-        "multi_tool": 0.7777777777444443,
-        "product_info": 0.7777777777388889,
+        "agronomic_advice": 0.9444444444055554,
+        "escalation": 0.6666666666333333,
+        "memory": 0.8452380951982142,
+        "multi_tool": 0.8124999999635416,
+        "product_info": 0.7916666666270833,
         "returns_policy": 0.9166666666208333
       }
     },
     "faithfulness": {
-      "mean": 0.7541925465838509,
-      "turns": 23,
+      "mean": 0.8464285714285714,
+      "turns": 22,
       "missing": 0,
       "by_category": {
-        "agronomic_advice": 0.9642857142857143,
-        "edge_cases": 0.0,
-        "escalation": 0.5317460317460317,
-        "memory": 0.823639455782313,
-        "multi_tool": 0.6095238095238095,
-        "product_info": 0.7666666666666666,
+        "agronomic_advice": 1.0,
+        "escalation": 0.6428571428571428,
+        "memory": 0.8843537414965986,
+        "multi_tool": 0.7738095238095237,
+        "product_info": 0.7625,
         "returns_policy": 1.0
       }
     }
   },
   "turns": [
+    {
+      "conversation_id": "conv_01",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_01",
+      "turn_index": 1,
+      "category": "product_info",
+      "metric": "context_precision_with_reference",
+      "value": 0.8333333332916666,
+      "reason": null
+    },
     {
       "conversation_id": "conv_02",
       "turn_index": 1,
@@ -51,7 +65,7 @@
       "turn_index": 2,
       "category": "product_info",
       "metric": "faithfulness",
-      "value": 0.5,
+      "value": 0.25,
       "reason": null
     },
     {
@@ -83,7 +97,7 @@
       "turn_index": 1,
       "category": "agronomic_advice",
       "metric": "faithfulness",
-      "value": 0.8571428571428571,
+      "value": 1.0,
       "reason": null
     },
     {
@@ -91,7 +105,7 @@
       "turn_index": 1,
       "category": "agronomic_advice",
       "metric": "context_precision_with_reference",
-      "value": 0.9999999999666667,
+      "value": 0.99999999995,
       "reason": null
     },
     {
@@ -127,22 +141,6 @@
       "reason": null
     },
     {
-      "conversation_id": "conv_06",
-      "turn_index": 2,
-      "category": "agronomic_advice",
-      "metric": "faithfulness",
-      "value": 1.0,
-      "reason": null
-    },
-    {
-      "conversation_id": "conv_06",
-      "turn_index": 2,
-      "category": "agronomic_advice",
-      "metric": "context_precision_with_reference",
-      "value": 0.9999999999,
-      "reason": null
-    },
-    {
       "conversation_id": "conv_10",
       "turn_index": 1,
       "category": "returns_policy",
@@ -179,7 +177,7 @@
       "turn_index": 1,
       "category": "multi_tool",
       "metric": "faithfulness",
-      "value": 0.42857142857142855,
+      "value": 0.5714285714285714,
       "reason": null
     },
     {
@@ -195,7 +193,7 @@
       "turn_index": 1,
       "category": "multi_tool",
       "metric": "faithfulness",
-      "value": 0.8,
+      "value": 0.8571428571428571,
       "reason": null
     },
     {
@@ -203,7 +201,7 @@
       "turn_index": 1,
       "category": "multi_tool",
       "metric": "context_precision_with_reference",
-      "value": 0.8333333332916666,
+      "value": 0.7499999999625,
       "reason": null
     },
     {
@@ -211,7 +209,7 @@
       "turn_index": 1,
       "category": "multi_tool",
       "metric": "faithfulness",
-      "value": 0.6,
+      "value": 0.6666666666666666,
       "reason": null
     },
     {
@@ -220,6 +218,22 @@
       "category": "multi_tool",
       "metric": "context_precision_with_reference",
       "value": 0.499999999975,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_13",
+      "turn_index": 2,
+      "category": "multi_tool",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_13",
+      "turn_index": 2,
+      "category": "multi_tool",
+      "metric": "context_precision_with_reference",
+      "value": 0.99999999995,
       "reason": null
     },
     {
@@ -243,7 +257,7 @@
       "turn_index": 1,
       "category": "escalation",
       "metric": "faithfulness",
-      "value": 0.42857142857142855,
+      "value": 0.2857142857142857,
       "reason": null
     },
     {
@@ -255,43 +269,11 @@
       "reason": null
     },
     {
-      "conversation_id": "conv_16",
-      "turn_index": 2,
-      "category": "escalation",
-      "metric": "faithfulness",
-      "value": 0.16666666666666666,
-      "reason": null
-    },
-    {
-      "conversation_id": "conv_16",
-      "turn_index": 2,
-      "category": "escalation",
-      "metric": "context_precision_with_reference",
-      "value": 0.9999999999666667,
-      "reason": null
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 2,
-      "category": "memory",
-      "metric": "faithfulness",
-      "value": 0.8571428571428571,
-      "reason": null
-    },
-    {
-      "conversation_id": "conv_17",
-      "turn_index": 2,
-      "category": "memory",
-      "metric": "context_precision_with_reference",
-      "value": 0.8055555555287036,
-      "reason": null
-    },
-    {
       "conversation_id": "conv_17",
       "turn_index": 3,
       "category": "memory",
       "metric": "faithfulness",
-      "value": 0.2,
+      "value": 0.5,
       "reason": null
     },
     {
@@ -304,10 +286,26 @@
     },
     {
       "conversation_id": "conv_17",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "faithfulness",
+      "value": 1.0,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
+      "turn_index": 4,
+      "category": "memory",
+      "metric": "context_precision_with_reference",
+      "value": 0.999999999975,
+      "reason": null
+    },
+    {
+      "conversation_id": "conv_17",
       "turn_index": 5,
       "category": "memory",
       "metric": "faithfulness",
-      "value": 0.875,
+      "value": 0.8571428571428571,
       "reason": null
     },
     {
@@ -331,7 +329,7 @@
       "turn_index": 6,
       "category": "memory",
       "metric": "context_precision_with_reference",
-      "value": 0.8055555555287036,
+      "value": 0.8333333332916666,
       "reason": null
     },
     {
@@ -380,22 +378,6 @@
       "category": "memory",
       "metric": "context_precision_with_reference",
       "value": 0.99999999995,
-      "reason": null
-    },
-    {
-      "conversation_id": "conv_20",
-      "turn_index": 2,
-      "category": "edge_cases",
-      "metric": "faithfulness",
-      "value": 0.0,
-      "reason": null
-    },
-    {
-      "conversation_id": "conv_20",
-      "turn_index": 2,
-      "category": "edge_cases",
-      "metric": "context_precision_with_reference",
-      "value": 0.0,
       "reason": null
     }
   ]

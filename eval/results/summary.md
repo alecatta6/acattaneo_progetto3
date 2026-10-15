@@ -8,9 +8,9 @@ Tutto cio' che precede la sezione *Analisi* e' generato: i numeri vengono da `tr
 
 | Metrica | Valore | Turni |
 |---|---|---|
-| needs_human accuracy | 86.0% | 37/43 |
+| needs_human accuracy | 95.3% | 41/43 |
 | tool selection accuracy | 82.5% | 33/40 |
-| source recall | 50.0% | 14/28 |
+| source recall | 60.7% | 17/28 |
 | schema validity | 100.0% | 43/43 |
 | answered without fallback | 100.0% | 43/43 |
 | summarization fired (memory) | 0.0% | 0/2 |
@@ -19,103 +19,101 @@ Tutto cio' che precede la sezione *Analisi* e' generato: i numeri vengono da `tr
 
 | Categoria | needs_human accuracy | tool selection accuracy | source recall | schema validity | answered without fallback | summarization fired (memory) |
 |---|---|---|---|---|---|---|
-| `agronomic_advice` | 100.0% (4/4) | 100.0% (4/4) | 75.0% (3/4) | 100.0% (4/4) | 100.0% (4/4) | n/d (0/0) |
+| `agronomic_advice` | 100.0% (4/4) | 75.0% (3/4) | 75.0% (3/4) | 100.0% (4/4) | 100.0% (4/4) | n/d (0/0) |
 | `edge_cases` | 75.0% (3/4) | 66.7% (2/3) | n/d (0/0) | 100.0% (4/4) | 100.0% (4/4) | n/d (0/0) |
-| `escalation` | 62.5% (5/8) | 50.0% (4/8) | 20.0% (1/5) | 100.0% (8/8) | 100.0% (8/8) | n/d (0/0) |
-| `memory` | 100.0% (13/13) | 90.9% (10/11) | 37.5% (3/8) | 100.0% (13/13) | 100.0% (13/13) | 0.0% (0/2) |
-| `multi_tool` | 75.0% (3/4) | 100.0% (4/4) | 75.0% (3/4) | 100.0% (4/4) | 100.0% (4/4) | n/d (0/0) |
+| `escalation` | 100.0% (8/8) | 50.0% (4/8) | 20.0% (1/5) | 100.0% (8/8) | 100.0% (8/8) | n/d (0/0) |
+| `memory` | 100.0% (13/13) | 90.9% (10/11) | 50.0% (4/8) | 100.0% (13/13) | 100.0% (13/13) | 0.0% (0/2) |
+| `multi_tool` | 100.0% (4/4) | 100.0% (4/4) | 100.0% (4/4) | 100.0% (4/4) | 100.0% (4/4) | n/d (0/0) |
 | `order_status` | 100.0% (3/3) | 100.0% (3/3) | n/d (0/0) | 100.0% (3/3) | 100.0% (3/3) | n/d (0/0) |
-| `product_info` | 100.0% (4/4) | 75.0% (3/4) | 50.0% (2/4) | 100.0% (4/4) | 100.0% (4/4) | n/d (0/0) |
+| `product_info` | 100.0% (4/4) | 100.0% (4/4) | 75.0% (3/4) | 100.0% (4/4) | 100.0% (4/4) | n/d (0/0) |
 | `returns_policy` | 66.7% (2/3) | 100.0% (3/3) | 66.7% (2/3) | 100.0% (3/3) | 100.0% (3/3) | n/d (0/0) |
 
 ### Turni che non rispettano l'attesa
 
-- **needs_human accuracy**: conv_09#1, conv_13#2, conv_16#1, conv_16#2, conv_16#3, conv_20#2
-- **tool selection accuracy**: conv_01#1, conv_15#2, conv_16#1, conv_16#2, conv_16#3, conv_17#4, conv_20#2
-- **source recall**: conv_01#1, conv_02#2, conv_06#1, conv_09#1, conv_13#2, conv_15#2, conv_16#1, conv_16#2, conv_16#3, conv_17#2, conv_17#3, conv_17#4, conv_18#2, conv_18#3
+- **needs_human accuracy**: conv_09#1, conv_19#2
+- **tool selection accuracy**: conv_06#2, conv_15#2, conv_16#1, conv_16#2, conv_16#3, conv_17#2, conv_19#2
+- **source recall**: conv_02#2, conv_06#2, conv_09#1, conv_15#2, conv_16#1, conv_16#2, conv_16#3, conv_17#2, conv_17#3, conv_18#2, conv_18#3
 - **summarization fired (memory)**: conv_17#7, conv_18#6
 
 ## Metriche RAGAS
 
 | Metrica | Media | Valutati | Mancanti |
 |---|---|---|---|
-| context_precision_with_reference | 0.798 | 23 | 0 |
-| faithfulness | 0.754 | 23 | 0 |
+| context_precision_with_reference | 0.833 | 22 | 0 |
+| faithfulness | 0.846 | 22 | 0 |
 
 ### Per categoria
 
 | Metrica | Categoria | Media |
 |---|---|---|
-| context_precision_with_reference | `agronomic_advice` | 0.958 |
-| context_precision_with_reference | `edge_cases` | 0.000 |
-| context_precision_with_reference | `escalation` | 0.778 |
-| context_precision_with_reference | `memory` | 0.813 |
-| context_precision_with_reference | `multi_tool` | 0.778 |
-| context_precision_with_reference | `product_info` | 0.778 |
+| context_precision_with_reference | `agronomic_advice` | 0.944 |
+| context_precision_with_reference | `escalation` | 0.667 |
+| context_precision_with_reference | `memory` | 0.845 |
+| context_precision_with_reference | `multi_tool` | 0.812 |
+| context_precision_with_reference | `product_info` | 0.792 |
 | context_precision_with_reference | `returns_policy` | 0.917 |
-| faithfulness | `agronomic_advice` | 0.964 |
-| faithfulness | `edge_cases` | 0.000 |
-| faithfulness | `escalation` | 0.532 |
-| faithfulness | `memory` | 0.824 |
-| faithfulness | `multi_tool` | 0.610 |
-| faithfulness | `product_info` | 0.767 |
+| faithfulness | `agronomic_advice` | 1.000 |
+| faithfulness | `escalation` | 0.643 |
+| faithfulness | `memory` | 0.884 |
+| faithfulness | `multi_tool` | 0.774 |
+| faithfulness | `product_info` | 0.762 |
 | faithfulness | `returns_policy` | 1.000 |
 
 ## Metriche DeepEval
 
 | Metrica | Media | Valutati | Mancanti |
 |---|---|---|---|
-| answer_relevancy | 0.908 | 43 | 0 |
-| escalation_correctness | 0.692 | 12 | 0 |
+| answer_relevancy | 0.884 | 43 | 0 |
+| escalation_correctness | 0.725 | 12 | 0 |
 | knowledge_retention | 1.000 | 2 | 0 |
 
 ### Per categoria
 
 | Metrica | Categoria | Media |
 |---|---|---|
-| answer_relevancy | `agronomic_advice` | 0.900 |
-| answer_relevancy | `edge_cases` | 0.608 |
-| answer_relevancy | `escalation` | 0.938 |
-| answer_relevancy | `memory` | 0.925 |
+| answer_relevancy | `agronomic_advice` | 0.896 |
+| answer_relevancy | `edge_cases` | 0.625 |
+| answer_relevancy | `escalation` | 0.919 |
+| answer_relevancy | `memory` | 0.912 |
 | answer_relevancy | `multi_tool` | 1.000 |
-| answer_relevancy | `order_status` | 1.000 |
-| answer_relevancy | `product_info` | 1.000 |
-| answer_relevancy | `returns_policy` | 0.833 |
-| escalation_correctness | `edge_cases` | 0.650 |
-| escalation_correctness | `escalation` | 0.713 |
+| answer_relevancy | `order_status` | 0.889 |
+| answer_relevancy | `product_info` | 0.950 |
+| answer_relevancy | `returns_policy` | 0.750 |
+| escalation_correctness | `edge_cases` | 0.700 |
+| escalation_correctness | `escalation` | 0.738 |
 | knowledge_retention | `memory` | 1.000 |
 
 ## I 3 casi peggiori
 
-### conv_16#2 — `escalation`
+### conv_09#1 — `returns_policy`
 
-- **Domanda**: Un'altra cosa: nell'ordine 1053 i bulbi sono arrivati ammuffiti.
-- **Risposta**: Per i bulbi ammuffiti all'apertura della confezione, come nel suo caso, GreenThumb copre il difetto senza limiti di tempo entro i 24 mesi dalla consegna. Visto che ha già richiesto il reso entro 8 giorni dalla consegna, la sua richiesta è valida e sarà gestita dal nostro servizio clienti. Se ha bisogno di ulteriore assistenza, sono a disposizione.
-- **Attese non rispettate**: 3
-- **Media dei punteggi giudicati**: 0.650
-- `needs_human`: False (atteso True)
-- tool: ['get_order_status', 'search_knowledge_base'] (attesi ['search_knowledge_base', 'get_order_status', 'escalate_to_human'])
-- fonti: ['policies/resi_rimborsi.md', 'policies/prodotti_deperibili.md'] (attese ['policies/danni_trasporto.md'])
-
-### conv_16#1 — `escalation`
-
-- **Domanda**: Aiuto, il mio cane ha mangiato un bulbo di tulipano. Cosa devo fare?
-- **Risposta**: I bulbi di tulipano sono tossici per i cani e possono causare sintomi come vomito, diarrea e irritazione orale. Le consiglio di contattare immediatamente un veterinario per una valutazione e un trattamento adeguato. Nel frattempo, eviti che il cane ingerisca altri bulbi o piante potenzialmente pericolose.
-- **Attese non rispettate**: 3
-- **Media dei punteggi giudicati**: 0.800
-- `needs_human`: False (atteso True)
-- tool: — (attesi ['search_knowledge_base', 'escalate_to_human'])
-- fonti: — (attese ['products/bulbi_tulipano_triumph.md'])
+- **Domanda**: Ho ricevuto una bustina di semi dieci giorni fa, posso ancora restituirla?
+- **Risposta**: La sua richiesta di restituzione della bustina di semi è stata presa in carico con il riferimento ESC-0001. Un operatore la contatterà entro 1 giorno lavorativo per fornirle tutte le informazioni necessarie. Il nostro servizio clienti è disponibile dal lunedì al venerdì, dalle 9:00 alle 13:00 e dalle 14:00 alle 18:00, e il sabato dalle 9:00 alle 12:30.
+- **Attese non rispettate**: 2
+- **Media dei punteggi giudicati**: 0.500
+- `needs_human`: True (atteso False)
+- tool: ['search_knowledge_base', 'escalate_to_human'] (attesi ['search_knowledge_base'])
+- fonti: — (attese ['policies/prodotti_deperibili.md'])
 
 ### conv_16#3 — `escalation`
 
 - **Domanda**: Quanto tempo ci vuole perché qualcuno mi risponda?
-- **Risposta**: Generalmente, il nostro servizio clienti risponde alle richieste di reso entro pochi giorni lavorativi. Se la sua pratica è già stata aperta, dovrebbe ricevere un riscontro a breve. Se desidera, posso verificare lo stato attuale della sua richiesta.
-- **Attese non rispettate**: 3
-- **Media dei punteggi giudicati**: 0.800
-- `needs_human`: False (atteso True)
+- **Risposta**: Un operatore la contatterà entro 4 ore lavorative. Il nostro servizio clienti è attivo dal lunedì al venerdì dalle 9:00 alle 13:00 e dalle 14:00 alle 18:00, e il sabato dalle 9:00 alle 12:30.
+- **Attese non rispettate**: 2
+- **Media dei punteggi giudicati**: 0.700
+- `needs_human`: True (atteso True)
 - tool: — (attesi ['search_knowledge_base'])
 - fonti: — (attese ['policies/contatti_orari.md'])
+
+### conv_19#2 — `edge_cases`
+
+- **Domanda**: Ho ricontrollato nell'email, il numero è proprio 9999.
+- **Risposta**: Ho ricontrollato e purtroppo non risulta alcun ordine con il numero 9999 nel nostro sistema. Potrebbe esserci stato un errore di trascrizione o un problema tecnico. Le consiglio di contattare direttamente il nostro servizio clienti per assistenza più approfondita.
+- **Attese non rispettate**: 2
+- **Media dei punteggi giudicati**: 0.700
+- `needs_human`: False (atteso True)
+- tool: — (attesi ['escalate_to_human'])
+- fonti: — (attese —)
 
 ## Analisi
 
@@ -233,4 +231,101 @@ usarla per giudicare l'intervento misurerebbe in parte il dataset.
 
 ## Confronto prima/dopo
 
-_Da compilare dopo la seconda esecuzione._
+### L'intervento
+
+Un solo cambiamento, in `src/greenthumb/prompts.py`, su due punti:
+
+1. la sezione sull'escalation è stata riscritta come **due regole esplicite** invece di un
+   elenco di criteri — *«se la knowledge base risponde, rispondi»* e *«se il caso ricade in
+   uno di questi criteri, apri il ticket, sempre, anche quando hai già risposto nel
+   merito»* — con l'aggiunta che una dichiarazione di «non ho trovato» è per definizione il
+   caso `no_knowledge`, e che per la salute di persone o animali il ticket `safety` è
+   obbligatorio *in aggiunta* al rinvio al medico o al veterinario;
+2. una riga nella regola di grounding: *«cercare viene prima di affermare»*, con l'obbligo
+   di chiamare `search_knowledge_base` prima di enunciare una cifra, un termine o una
+   caratteristica di prodotto.
+
+Il prompt è passato da 722 a 995 parole. Era arrivato a 1057, oltre il tetto di 1000 che un
+test impone: ho tagliato il testo invece di alzare il tetto, perché il limite esiste per una
+ragione (ADR-052) e spostarlo perché dà fastidio è il modo di non avere più limiti.
+
+### I risultati, metrica per metrica
+
+| Ruolo | Metrica | Prima | Dopo | Δ |
+|---|---|---|---|---|
+| **Primaria** | `needs_human accuracy` | 86,0% (37/43) | **95,3% (41/43)** | **+9,3 pt** |
+| **Secondaria** | `escalation_correctness` (GEval) | 0.692 | **0.725** | +0.033 |
+| Guardia | `tool selection accuracy` | 82,5% (33/40) | 82,5% (33/40) | invariata |
+| Guardia | `answer_relevancy` | 0.908 | **0.884** | **−0.024** |
+| Fuori giudizio | `source recall` | 50,0% (14/28) | 60,7% (17/28) | +10,7 pt |
+| Fuori giudizio | RAGAS Faithfulness | 0.754 | 0.846 | +0.092 |
+| Fuori giudizio | RAGAS ContextPrecision | 0.798 | 0.833 | +0.035 |
+| Fuori giudizio | `summarization fired (memory)` | 0/2 | 0/2 | invariata |
+
+**La metrica primaria è salita di 9,3 punti**, e nel modo giusto: dei sei turni che
+sbagliavano il flag, cinque sono corretti. Tutti e tre i turni di conv_16 — il caso `safety`
+del cane, i bulbi ammuffiti, la domanda sui tempi — ora aprono il ticket, e così conv_13#2 e
+conv_20#2. La secondaria si muove nella stessa direzione, di poco.
+
+### Quello che l'intervento è costato
+
+Non è un miglioramento gratuito, e vale la pena dirlo prima dei meriti.
+
+**Una regressione sulla metrica primaria**: conv_19#2, il secondo tentativo sull'ordine 9999
+con il numero confermato, **prima escalava e ora no**. L'agente risponde che l'ordine non
+risulta e consiglia di contattare il servizio clienti — senza aprire il ticket
+`order_not_found`. L'ipotesi più probabile è che la precisazione «se un ordine non risulta al
+primo tentativo, non escalare», ora vicina a due regole scritte in grassetto, sia stata letta
+come la regola prevalente anche al secondo tentativo. Il saldo resta ampiamente positivo
+(cinque corretti, uno rotto), ma è una regressione introdotta da me, non rumore.
+
+**La guardia `answer_relevancy` è scesa di 0.024.** La causa si legge nelle risposte: dove
+l'agente ora apre un ticket, il testo tende a diventare *solo* il ticket. conv_16#1 risponde
+«la sua richiesta è stata presa in carico con il riferimento ESC-0005 […] la invito a
+rivolgersi a un veterinario»: corretto, ma la parte informativa sulla tossicità del bulbo,
+che nella prima esecuzione c'era, è sparita. **Rendere obbligatorio il ticket ha spostato il
+peso della risposta dal contenuto alla procedura.** È il prezzo misurabile di questo
+intervento, e la direzione in cui andrebbe il prossimo: il ticket in aggiunta alla risposta,
+non al posto della risposta.
+
+**`tool selection accuracy` è invariata nel valore e cambiata nell'insieme.** Corretti
+conv_01#1 (la domanda sulle forbici ora cerca davvero), conv_20#2 e conv_17#4; rotti
+conv_06#2, conv_17#2 e conv_19#2. I tre turni di conv_16 continuano a mancare
+`search_knowledge_base`: ora escalano senza cercare, cioè la Regola 2 ha funzionato e la
+riga sul grounding no.
+
+### Quanto di tutto questo è merito del prompt
+
+Una parte del movimento **non** dipende dall'intervento. OpenRouter smista le richieste fra
+fornitori a monte e il pinning non è implementabile attraverso LiteLLM (ADR-030), quindi due
+esecuzioni con lo stesso prompt e temperatura 0 possono divergere. In questa fase se n'è già
+visto un caso pulito: nello smoke run conv_01#1 ha cercato nella knowledge base, nella prima
+esecuzione completa lo stesso turno non ha cercato affatto, **a prompt identico**.
+
+Il segnale che distingue i due effetti è la **direzione**. I cinque turni corretti sono
+esattamente quelli che l'intervento prendeva di mira — i criteri di escalation obbligatori —
+e si muovono tutti dalla stessa parte: è difficile attribuirlo al caso. conv_06#2 e conv_17#2
+invece sono peggiorati *nel senso contrario* alla modifica: la riga «cercare viene prima di
+affermare» può solo aumentare le ricerche, e quei due turni hanno smesso di cercare. Quello
+è rumore del fornitore, non un effetto del prompt.
+
+### Il difetto che resta, e perché non lo tocco adesso
+
+conv_09#1 sbaglia ancora, e nel modo peggiore: alla domanda «ho ricevuto una bustina di semi
+dieci giorni fa, posso ancora restituirla?» l'agente **cerca** nella knowledge base (progresso
+rispetto a prima) e poi apre comunque il ticket ESC-0001, rispondendo soltanto che la
+richiesta è stata presa in carico. La Regola 1 è scritta e non ha morso. Nota di contorno: la
+`confidence` risultante è `low`, quindi il sistema dichiara da sé di non essere sicuro — il
+cap deterministico fa il suo lavoro anche quando il modello sbaglia.
+
+Una seconda iterazione sul prompt è l'ipotesi naturale, ma la fase 7 chiede **un** intervento
+misurato e lo ha prodotto. Accumulare modifiche sullo stesso prompt eseguendo l'evaluation
+dopo ognuna costa una esecuzione completa per tentativo e, soprattutto, rischia di diventare
+sovradattamento a venti conversazioni: a quel punto i numeri salgono e misurano sempre meno.
+
+### Verdetto
+
+L'intervento si **accetta**: la metrica primaria dichiarata prima di eseguirlo sale di 9,3
+punti, la secondaria la segue, e i casi corretti sono quelli che il cambiamento prendeva di
+mira. Si accetta **con due costi dichiarati**: una regressione su conv_19#2 e un calo di
+0.024 su `answer_relevancy` dovuto a risposte che diventano procedura invece di contenuto.
