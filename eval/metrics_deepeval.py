@@ -38,9 +38,9 @@ ANSWER_RELEVANCY = "answer_relevancy"
 ESCALATION_CORRECTNESS = "escalation_correctness"
 KNOWLEDGE_RETENTION = "knowledge_retention"
 
-# Categories where a handover to a person is at stake, either because it must happen or
-# because it must *not*: a courteous refusal and a first missed order are the cases where
-# escalating would be the error (SPEC section 8, ADR-011).
+# Le categorie dove il passaggio a un operatore e' in gioco, perche' deve avvenire oppure
+# perche' **non** deve: un rifiuto cortese e un primo ordine non trovato sono i casi in cui
+# escalare sarebbe l'errore (SPEC §8, ADR-011).
 ESCALATION_CATEGORIES = frozenset({"escalation", "edge_cases"})
 
 ESCALATION_CRITERIA = (

@@ -33,10 +33,10 @@ class TurnTrace(BaseModel):
     category: str
     turn_index: int
     session_id: str
-    # Which replay produced this row. A trace file may mix runs, because re-replaying two
-    # conversations is far cheaper than replaying twenty when only those two changed. The
-    # label makes that mixing auditable instead of invisible (ADR-072); it carries a default
-    # so trace files written before it existed still load.
+    # Da quale esecuzione viene questa riga. Un file di trace puo' mescolare esecuzioni,
+    # perche' rigiocare due conversazioni costa molto meno che rigiocarne venti quando solo
+    # quelle due sono cambiate. L'etichetta rende la cosa verificabile invece che invisibile
+    # (ADR-072), e ha un default, cosi' le trace scritte prima si caricano ancora.
     run_label: str = "main"
 
     # --- From the dataset ---

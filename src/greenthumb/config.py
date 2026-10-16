@@ -22,9 +22,9 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 DEFAULT_BUSINESS_DATE = dt.date(2026, 10, 12)
 
-# Measured in phase 5: the first model call of a conversation already reports this many
-# tokens, because the request carries the system prompt and the three tool schemas. The
-# summarization trigger is compared against that figure, so it has to clear it (ADR-056).
+# Misurato in fase 5: la prima chiamata di una conversazione riporta gia' questi token,
+# perche' la richiesta porta con se' il system prompt e gli schemi dei tre tool. La soglia
+# di summarization si confronta con quel numero, quindi deve starci sopra (ADR-056).
 MEASURED_REQUEST_FLOOR_TOKENS = 2583
 MIN_SUMMARY_TRIGGER_TOKENS = 3000
 
@@ -69,10 +69,10 @@ class Settings(BaseSettings):
     # --- Retrieval ---
     embedding_model: str = Field(default="intfloat/multilingual-e5-base")
     retrieval_top_k: int = Field(default=4, ge=1, le=20)
-    # Calibrated in phase 2 on the real knowledge base; see docs/retrieval_calibration.md
-    # and ADR-040. Expressed as cosine similarity, 1 - distance (ADR-021).
-    # No gt=0 constraint here on purpose: a field constraint fires before the validator
-    # below and would replace its actionable message with a generic one.
+    # Calibrate in fase 2 sulla knowledge base vera: vedi docs/RETRIEVAL_CALIBRATION.md e
+    # ADR-040. Sono similarita' coseno, cioe' 1 - distanza (ADR-021).
+    # Niente vincolo gt=0 qui, di proposito: i vincoli sul campo scattano prima del
+    # validatore sotto e ne sostituirebbero il messaggio utile con uno generico.
     retrieval_score_low: float = Field(
         default=0.813,
         le=1.0,
@@ -88,13 +88,12 @@ class Settings(BaseSettings):
         description="At or above this, retrieval quality allows high confidence.",
     )
 
-    # --- Short-term memory (ADR-004) ---
-    # Calibrated in phase 5 against what the provider actually reports (ADR-056), then
-    # re-calibrated in phase 7 against measured growth instead of an estimate: real
-    # customer-care turns add ~600 tokens each, not the ~1000 first assumed, so 8000 landed
-    # around the twelfth turn and summarization never fired in the evaluation (ADR-072). The
-    # trigger is compared against the reported total_tokens of the whole request, system
-    # prompt and tool schemas included, not against the conversation alone.
+    # --- Memoria a breve termine (ADR-004) ---
+    # Calibrata due volte. In fase 5 sul totale che riporta il provider (ADR-056), in fase 7
+    # sulla crescita misurata invece che stimata: un turno vero aggiunge ~600 token, non i
+    # ~1000 che avevo supposto, quindi 8000 cadeva verso il dodicesimo turno e nell'eval la
+    # summarization non scattava mai (ADR-072). Attenzione: la soglia si confronta con i
+    # total_tokens di tutta la richiesta, system prompt e schemi dei tool inclusi.
     summary_trigger_tokens: int = Field(
         default=6000,
         le=200_000,
@@ -140,7 +139,7 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"GREENTHUMB_RETRIEVAL_SCORE_LOW={value} accetterebbe qualunque risultato "
                 "come rilevante, disattivando il filtro. Il valore calibrato e' 0.813: "
-                "vedi docs/retrieval_calibration.md. Rimuovi la riga dal .env per usare "
+                "vedi docs/RETRIEVAL_CALIBRATION.md. Rimuovi la riga dal .env per usare "
                 "il default, oppure impostala al valore calibrato."
             )
         return value

@@ -9,8 +9,8 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 ## ADR-001 — Sviluppo in repository locale, consegna via notebook Colab
 
 - **Contesto**: la consegna è un link Colab; la traccia chiede anche un repository.
-- **Decisione**: sviluppo in un repository Python con Claude Code; il notebook clona il repo e ne
-  esegue le parti, contenendo la relazione.
+- **Decisione**: sviluppo in un repository Python versionato e testato; il notebook clona il
+  repo e ne esegue le parti, contenendo la relazione.
 - **Alternative scartate**: sviluppo interamente in Colab (niente git e test, sessioni
   effimere); celle `%%writefile` (codice poco manutenibile).
 - **Conseguenze**: codice testabile e modulare; serve verificare il notebook su runtime pulito.
@@ -190,7 +190,7 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   la telemetria di DeepEval, perché un notebook di consegna non deve caricare i risultati di
   valutazione su un servizio cloud terzo senza che chi lo esegue lo sappia.
 - **Conseguenze**: l'extra `full` porta con sé `transformers>=5.0.0,<6`, major version su cui gran
-  parte del materiale online è obsoleto — vale la regola 3 di CLAUDE.md. Si noti anche che
+  parte del materiale online è obsoleto — vale la regola 1 di `docs/CONVENTIONS.md`. Si noti anche che
   `langchain-litellm` 0.7.2 non dichiara **alcuna** dipendenza (né `langchain-core` né `litellm`):
   nessun resolver ci proteggerà da un disallineamento, che va verificato a mano.
 
@@ -223,14 +223,14 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   la 0.4.3 emette un `DeprecationWarning` esplicito: quel percorso sarà rimosso in v1.0 e il
   sostituto è `ragas.metrics.collections`.
 - **Decisione**: usare `ragas.metrics.collections` fin da subito.
-- **Conseguenze**: conferma la regola 3 di CLAUDE.md — quasi tutto il materiale online su RAGAS
+- **Conseguenze**: conferma la regola 1 di `docs/CONVENTIONS.md` — quasi tutto il materiale online su RAGAS
   usa il percorso deprecato. Le firme esatte delle due metriche restano da verificare nello
   spike n.5 (fase 0, passo 4).
 
 ## ADR-021 — Soglie calibrate sulla distanza grezza di Chroma
 
-- **Contesto**: SPEC §6 parla di "score" senza dire quale API usare, e CLAUDE.md avverte di
-  distinguere distanza da similarità. Spike n.4, nessuna chiamata LLM.
+- **Contesto**: SPEC §6 parla di "score" senza dire quale API usare, e fra le insidie che mi
+  ero annotato c'è proprio distinguere distanza da similarità. Spike n.4, nessuna chiamata LLM.
 - **Misura**: sulla versione installata le due API sono legate da una relazione esatta,
   `relevance = 1 − distanza` (verificato: distanza 0.0870 → relevance 0.9130; 0.1261 → 0.8739;
   0.1304 → 0.8696). Nessuna normalizzazione esotica di mezzo, in questa versione.
@@ -245,8 +245,8 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 
 ## ADR-022 — Prefissi e5 mantenuti, ma l'effetto misurato è modesto
 
-- **Contesto**: CLAUDE.md avverte che senza i prefissi `query: ` / `passage: ` "la qualità del
-  retrieval crolla in modo silenzioso". Lo spike n.4 ha misurato l'affermazione.
+- **Contesto**: la documentazione di e5 avverte che senza i prefissi `query: ` / `passage: `
+  "la qualità del retrieval crolla in modo silenzioso". Lo spike n.4 ha misurato l'affermazione.
 - **Misura** (4 passaggi in italiano, 3 query pertinenti, 2 fuori tema):
 
   | | hit@1 | peggior distanza pertinente | miglior distanza fuori tema | separazione |
@@ -258,13 +258,13 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   perfetto in entrambi i casi. **Su questo campione il "crollo" descritto non si riproduce.**
 - **Decisione**: usare comunque i prefissi. Sono l'uso documentato del modello, non costano
   nulla, e l'effetto atteso cresce con corpus più grandi e negativi più difficili di questi.
-- **Conseguenze**: l'avvertimento di CLAUDE.md va ridimensionato, non ignorato. Il campione è di
+- **Conseguenze**: l'avvertimento va ridimensionato, non ignorato. Il campione è di
   soli 4 documenti con negativi banali (capitali del Giappone, router wifi): va **rimisurato in
   fase 2** sulla KB reale da 35 documenti, dove i distrattori sono altri documenti di giardinaggio
   e quindi molto più insidiosi. Onestà del dato: non è ancora una prova che i prefissi siano
   superflui, ma nemmeno una conferma che siano critici.
 - **Nota di calibrazione**: le distanze pertinenti stanno in 0.087–0.135 e le fuori tema in
-  0.226–0.272. La fascia è alta e stretta, come CLAUDE.md prevedeva: una soglia plausibile cade
+  0.226–0.272. La fascia è alta e stretta, come previsto: una soglia plausibile cade
   attorno a similarità 0.82–0.83, ma va calibrata sui dati veri in fase 2, non fissata ora.
 
 ## ADR-023 — RAGAS: metriche `collections` chiamate per turno, non `evaluate()`
@@ -612,8 +612,8 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 
 ## ADR-040 — Soglie di retrieval calibrate: 0.813 e 0.864
 
-- **Contesto**: CLAUDE.md avverte che gli score di e5 si concentrano in una fascia alta e
-  stretta e vanno calibrati empiricamente. Misurato con `scripts/probe_retrieval.py` su 12 query
+- **Contesto**: gli score di e5 si concentrano in una fascia alta e stretta e vanno quindi
+  calibrati empiricamente, non indovinati. Misurato con `scripts/probe_retrieval.py` su 12 query
   pertinenti e 8 fuori tema, tutte formulate **senza riusare le frasi dei documenti** — usare le
   parole del documento gonfierebbe gli score e calibrerebbe su una situazione irreale.
 - **Risultati**: **hit@1 = 12/12, hit@4 = 12/12**, contro un obiettivo di fase 2 di hit@4 ≥ 90%.
@@ -627,7 +627,7 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   `HIGH = 0.864` (mediana dei pertinenti: circa metà dei recuperi validi può dichiarare
   confidence alta). Promosse a **default in `config.py`**, così il sistema funziona senza
   che nessuno debba tarare il `.env`.
-- **L'avvertimento di CLAUDE.md è confermato, e in forma severa**: la separazione è di appena
+- **L'avvertimento è confermato, e in forma severa**: la separazione è di appena
   **+0.0132** (peggior pertinente 0.8195, miglior fuori tema 0.8063). Con soglia a 0.813 restano
   circa 0.0065 di margine per lato, stimati su sole 20 query.
 - **Conseguenza architetturale**: la soglia **non è un confine affidabile** e non va trattata
@@ -638,7 +638,7 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Nota sul comportamento del retrieval**: il motore restituisce **sempre** qualcosa. Alla
   domanda «qual è la capitale del Giappone?» risponde con la guida alla concimazione, a 0.7433.
   È la soglia, non il motore, a dover dichiarare che nessun documento è pertinente.
-- Tabelle complete in `docs/retrieval_calibration.md`.
+- Tabelle complete in `docs/RETRIEVAL_CALIBRATION.md`.
 
 ## ADR-041 — Prefissi e5: l'avvertimento era sovrastimato, si mantengono comunque
 
@@ -654,7 +654,8 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   | **Senza** prefissi | 11/12 | 12/12 | 0.8268 | 0.8139 | +0.0130 |
 
 - **Esito**: i prefissi recuperano una query in prima posizione e lasciano la separazione
-  praticamente identica. **Il «crollo silenzioso» descritto da CLAUDE.md non si verifica** su
+  praticamente identica. **Il «crollo silenzioso» descritto dalla documentazione non si
+  verifica** su
   questo corpus, né sul campione giocattolo della fase 0.
 - **Decisione**: mantenerli. Sono l'uso documentato del modello, non costano nulla e il
   miglioramento su hit@1 è reale, per quanto piccolo. Sono applicati dentro `E5Embeddings`, così
@@ -749,7 +750,7 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   modello legge a ogni turno: 5% di caratteri in meno e nessuna ripetizione priva di
   informazione. La differenza sulle metriche rientra nel rumore di un campione di 20 query.
 - **Conseguenze**: indice ricostruito, soglie ricalibrate (`LOW` resta 0.813, `HIGH` scende da
-  0.864 a 0.863), `docs/retrieval_calibration.md` riscritto per intero. ADR-040 e ADR-041 vanno
+  0.864 a 0.863), `docs/RETRIEVAL_CALIBRATION.md` riscritto per intero. ADR-040 e ADR-041 vanno
   letti alla luce di questa seconda misura.
 
 ## ADR-046 — L'ablazione sui prefissi diventa uno script versionato, e il verdetto si complica
@@ -778,10 +779,10 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 - **Decisione**: mantenere i prefissi. Sono l'uso documentato del modello, la statistica più
   stabile li favorisce, `hit@1` e `hit@4` sono identici nelle due varianti, e la soglia operativa
   resta comunque presidiata da altri due meccanismi (ADR-040).
-- **Conseguenza per la relazione**: l'avvertimento di CLAUDE.md — «senza i prefissi la qualità
-  del retrieval crolla in modo silenzioso» — **non è confermato da nessuna delle quattro
-  misure**. Va riportato come esempio concreto di insidia ereditata dalla documentazione e
-  smentita dalla misura sul proprio corpus.
+- **Conseguenza per la relazione**: l'avvertimento della documentazione di e5 — «senza i
+  prefissi la qualità del retrieval crolla in modo silenzioso» — **non è confermato da nessuna
+  delle quattro misure**. Va riportato come esempio concreto di insidia ereditata dalla
+  documentazione e smentita dalla misura sul proprio corpus.
 
 ## ADR-047 — `RunnableConfig` va dichiarato senza default, altrimenti non viene iniettato
 
@@ -1608,8 +1609,8 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
      sezione 6 ora fa lo stesso e mostra sempre `ESC-0001`.
 - **Tre firme sbagliate per memoria**, trovate dalla prima esecuzione: `search(k=...)`
   invece di `top_k`, `SearchHit.score` invece di `similarity`, `TurnEvidence(retrieval_used=...)`
-  invece di `retrieval_ran`. È la regola 3 di CLAUDE.md applicata al codice **del progetto
-  stesso**: non fidarsi della memoria sulle firme vale anche per le API che si sono scritte.
+  invece di `retrieval_ran`. È la regola 1 di `docs/CONVENTIONS.md` applicata al codice **del
+  progetto stesso**: non fidarsi della memoria sulle firme vale anche per le API che si sono scritte.
 - **Controllo di sicurezza**: gli output salvati sono stati scansionati per chiavi del
   provider (`sk-...`) prima del commit. Nessuna presente — ed è un controllo da rifare a ogni
   rigenerazione, perché un notebook con output salvati è un file che **contiene** ciò che ha

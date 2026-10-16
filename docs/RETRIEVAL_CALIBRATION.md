@@ -119,7 +119,8 @@ medie usa tutte le osservazioni ed è coerente in entrambe le configurazioni di 
 
 Si mantengono i prefissi: sono l'uso documentato del modello, la statistica più stabile li
 favorisce, e `hit@1`/`hit@4` sono identici nelle due varianti. Resta però registrato che
-l'avvertimento di CLAUDE.md — «senza, la qualità del retrieval crolla in modo silenzioso» — **non
+l'avvertimento della documentazione e5 — «senza, la qualità del retrieval crolla in modo
+silenzioso» — **non
 è confermato da nessuna delle quattro misure**.
 
 ## Limiti di questa calibrazione

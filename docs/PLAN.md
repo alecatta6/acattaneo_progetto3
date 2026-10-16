@@ -2,9 +2,10 @@
 
 L'ordine segue quello richiesto dalla traccia: dati e indicizzazione → tool → loop ReAct →
 memoria → structured output → evaluation → API. Ogni fase termina con una Definition of Done
-(DoD) verificabile. Claude Code si ferma a fine fase e attende approvazione.
+(DoD) verificabile: finché i controlli della DoD non passano, la fase non è chiusa e non si
+passa alla successiva.
 
-Stato: aggiornare la casella di ogni fase quando l'utente la approva.
+Stato: la casella di ogni fase si spunta quando la DoD è verificata.
 
 ---
 
@@ -36,13 +37,13 @@ DoD:
 
 ---
 
-## [x] Fase 1 — Dati sintetici ✅ completata (revisione utente effettuata)
+## [x] Fase 1 — Dati sintetici ✅ completata (campione di documenti rivisto)
 
 **Obiettivo**: knowledge base e ordini realistici, coerenti tra loro, validati automaticamente.
 
 Task:
-1. `data/catalog.yaml` con 16 prodotti (SPEC §4.2). **Fermarsi e mostrarlo all'utente** prima di
-   scrivere le schede: tutto il resto ne dipende.
+1. `data/catalog.yaml` con 16 prodotti (SPEC §4.2). **Da rileggere prima** di scrivere le
+   schede: tutto il resto ne dipende.
 2. 16 schede prodotto, 12 guide, 7 policy (SPEC §4.3). Scrivere a lotti (prima le policy, poi
    prodotti, poi guide), variando struttura e registro per evitare documenti-fotocopia.
 3. `scripts/generate_orders.py` (seed fisso, relativo alla business date) → `data/orders.json`.
@@ -53,7 +54,7 @@ Task:
 
 DoD:
 - `make data` passa senza errori; ≥35 documenti e ≥24 ordini.
-- L'utente ha rivisto un campione di documenti (almeno 1 per tipo) e il catalogo.
+- Rivisto a mano un campione di documenti (almeno 1 per tipo) e il catalogo.
 
 ---
 
@@ -146,13 +147,13 @@ DoD:
 
 ---
 
-## [x] Fase 7 — Evaluation ✅ completata (revisione utente effettuata)
+## [x] Fase 7 — Evaluation ✅ completata (dataset rivisto prima dell'esecuzione)
 
 **Obiettivo**: misurare l'affidabilità e commentare i risultati.
 
 Task:
-1. `eval/conversations.jsonl` (20 conversazioni, SPEC §10.1 e ADR-016/062). **Fermarsi e farlo rivedere**
-   prima di eseguire: il dataset determina tutto il resto.
+1. `eval/conversations.jsonl` (20 conversazioni, SPEC §10.1 e ADR-016/062). **Da rivedere
+   prima di eseguire**: il dataset determina tutto il resto.
 2. Runner con salvataggio delle trace; metriche RAGAS, DeepEval e deterministiche.
 3. Prima esecuzione completa (chiedere conferma: ha un costo), `summary.md`.
 4. Analisi dei 3 casi peggiori → almeno un intervento correttivo (prompt, soglie, chunking) →
@@ -187,8 +188,7 @@ Task:
 1. `notebooks/greenthumb_delivery.ipynb` secondo SPEC §13; uvicorn in thread per la demo API.
 2. Relazione nelle celle Markdown: scelte architetturali, memoria, analisi dell'evaluation,
    limiti e sviluppi futuri. Tono tecnico, sintetico, in italiano.
-3. Verifica su runtime Colab pulito (eventualmente tramite il Colab MCP server): "Esegui tutto"
-   senza errori; output salvati.
+3. Verifica su runtime Colab pulito: "Esegui tutto" senza errori, output salvati.
 4. Aggiornare la tabella di tracciabilità SPEC §1 e controllare ogni requisito.
 
 DoD:

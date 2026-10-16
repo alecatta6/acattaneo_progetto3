@@ -1068,11 +1068,12 @@ Dichiarati, non nascosti:
 
 | Documento | Contenuto |
 |---|---|
-| `docs/DECISIONS.md` | 74 decisioni architetturali con contesto, alternative scartate e conseguenze |
+| `docs/DECISIONS.md` | 75 decisioni architetturali con contesto, alternative scartate e conseguenze |
+| `docs/CONVENTIONS.md` | convenzioni di codice e insidie delle librerie, con i numeri che le smentiscono |
 | `docs/SPEC.md` | specifica tecnica e tracciabilità dei requisiti |
 | `docs/PLAN.md` | piano di lavoro con Definition of Done per fase |
 | `eval/results/summary.md` | report dell'evaluation, generato, con l'analisi dei casi peggiori |
-| `docs/retrieval_calibration.md` | tabelle complete della calibrazione delle soglie |
+| `docs/RETRIEVAL_CALIBRATION.md` | tabelle complete della calibrazione delle soglie |
 """
 )
 

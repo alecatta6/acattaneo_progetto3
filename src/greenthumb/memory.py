@@ -43,9 +43,9 @@ logger = logging.getLogger(__name__)
 # better handle than the English sentence the library hardcodes in front of the summary.
 SUMMARY_SOURCE_MARKER = "summarization"
 
-# The hardcoded preamble, kept only as a fallback for the marker. It is English text inside
-# an otherwise entirely Italian conversation, and it is not configurable: a small blemish
-# worth naming rather than hiding.
+# La frase fissa che il middleware premette al riassunto. La tengo solo come ripiego se il
+# marcatore manca. E' testo inglese dentro una conversazione tutta italiana e non e'
+# configurabile: un piccolo difetto che preferisco dichiarare invece di nascondere.
 SUMMARY_TEXT_PREFIX = "Here is a summary of the conversation to date:"
 
 
@@ -150,10 +150,11 @@ def summarization_occurred(messages: Sequence[BaseMessage]) -> bool:
     return find_summary(messages) is not None
 
 
-# Modules whose types are stored in checkpoints. The agent's structured response is one of
-# them, and deserialising an unregistered type is deprecated: permissive today, blocked in a
-# future release. Declaring it keeps multi-turn conversations working across upgrades, and
-# is the safer posture anyway, since the permissive mode accepts any type at all (ADR-054).
+# I tipi che finiscono nei checkpoint. L'output strutturato dell'agente e' uno di questi, e
+# deserializzare un tipo non registrato e' deprecato: oggi passa, in una versione futura
+# verra' bloccato. Dichiararlo tiene in piedi le conversazioni multi-turno dopo un
+# aggiornamento, ed e' comunque piu' sicuro: la modalita' permissiva accetta qualsiasi tipo
+# (ADR-054).
 CHECKPOINT_ALLOWED_MODULES = {("greenthumb.schemas", "AgentOutput")}
 
 

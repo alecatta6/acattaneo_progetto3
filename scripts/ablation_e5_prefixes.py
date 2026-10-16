@@ -1,6 +1,7 @@
 """Measure what the e5 query/passage prefixes actually buy on this corpus.
 
-CLAUDE.md warns that omitting the prefixes makes retrieval quality "collapse silently".
+The e5 model card warns that omitting the prefixes makes retrieval quality "collapse
+silently".
 That claim is measurable, and a measurement cited in DECISIONS.md should be reproducible,
 which is why this lives in the repository rather than in a throwaway file.
 

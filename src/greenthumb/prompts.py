@@ -15,9 +15,9 @@ import datetime as dt
 
 from greenthumb.clock import season_of
 
-# One line per escalation criterion, keyed by the enum value in escalations_repository.
-# Generated into the prompt rather than written out twice, so the criteria the model reads
-# and the criteria the tool accepts cannot drift apart.
+# Una riga per criterio di escalation, con la chiave uguale al valore dell'enum in
+# escalations_repository. Li genero nel prompt invece di riscriverli a mano, cosi' i criteri
+# che legge il modello e quelli che il tool accetta non possono divergere.
 ESCALATION_CRITERIA: dict[str, str] = {
     "customer_request": "il cliente chiede esplicitamente di parlare con una persona",
     "refund_exception": (
@@ -213,10 +213,10 @@ def build_system_prompt(today: dt.date) -> str:
     )
 
 
-# The middleware's stock prompt is written for a coding agent, with sections named SESSION
-# INTENT, ARTIFACTS and NEXT STEPS. Applied to customer care it would summarise away exactly
-# what has to survive: the order number quoted in turn one, and the constraint the customer
-# mentioned in passing. The replacement below is not decoration (ADR-028).
+# Il prompt predefinito del middleware e' pensato per un assistente di programmazione, con
+# sezioni SESSION INTENT, ARTIFACTS e NEXT STEPS. Su un customer care butterebbe via proprio
+# cio' che deve sopravvivere: il numero d'ordine del primo turno e il vincolo che il cliente
+# ha citato di sfuggita. Quello qui sotto non e' un abbellimento (ADR-028).
 SUMMARY_PROMPT = """\
 Riassumi la conversazione fra un cliente e l'assistente di GreenThumb.
 

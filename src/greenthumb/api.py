@@ -28,9 +28,9 @@ from greenthumb.service import ChatService, build_chat_service, new_session_id
 
 logger = logging.getLogger(__name__)
 
-# SPEC section 11: an empty message carries no question, and 2000 characters is already far
-# beyond anything a customer types. Both are rejected with 422 rather than spent on a model
-# call.
+# SPEC §11: un messaggio vuoto non contiene nessuna domanda, e 2000 caratteri sono molto
+# oltre quello che un cliente scrive davvero. Entrambi i casi finiscono in 422 invece di
+# costare una chiamata al modello.
 MIN_MESSAGE_LENGTH = 1
 MAX_MESSAGE_LENGTH = 2000
 

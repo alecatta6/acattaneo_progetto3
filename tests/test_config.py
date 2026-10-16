@@ -34,7 +34,7 @@ def test_defaults_match_the_specification() -> None:
 
 
 def test_retrieval_thresholds_are_the_calibrated_values() -> None:
-    """Phase 2 measured these on the real corpus; see docs/retrieval_calibration.md."""
+    """Phase 2 measured these on the real corpus; see docs/RETRIEVAL_CALIBRATION.md."""
     settings = _settings()
     assert settings.retrieval_score_low == 0.813
     assert settings.retrieval_score_high == 0.863

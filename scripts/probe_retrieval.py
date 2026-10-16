@@ -1,6 +1,6 @@
 """Calibrate the retrieval thresholds on real data.
 
-CLAUDE.md warns that e5 scores cluster in a high, narrow band and must be calibrated
+e5 scores cluster in a high, narrow band and must therefore be calibrated
 empirically rather than guessed. This script runs a fixed probe set — queries phrased the
 way a customer would ask, plus deliberately off-topic ones — and reports the score
 distribution of each group, from which the two thresholds follow.

@@ -22,10 +22,10 @@ from eval.traces import TurnTrace, load_traces
 logger = logging.getLogger(__name__)
 
 SUMMARY_PATH = RESULTS_DIR / "summary.md"
-# Hand-written prose, included verbatim at the end of the generated report. It lives in
-# its own file because the report is regenerated on every run: prose written into the
-# generated file would be destroyed by the next run, which is a bad place to keep the one
-# part of the report that cannot be computed (ADR-069).
+# Prosa scritta a mano, inclusa cosi' com'e' alla fine del report generato. Sta in un file
+# suo perche' il report si rigenera a ogni esecuzione: scriverla dentro il file generato
+# significherebbe perderla al giro successivo, ed e' il posto peggiore per l'unica parte del
+# report che non si puo' calcolare (ADR-069).
 ANALYSIS_PATH = RESULTS_DIR / "analysis.md"
 WORST_CASES = 3
 

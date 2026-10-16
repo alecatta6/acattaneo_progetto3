@@ -71,7 +71,7 @@ select = [
     "I",   # import sorting
     "UP",  # pyupgrade
     "B",   # bugbear
-    "N",   # pep8-naming — exam requirement (CLAUDE.md)
+    "N",   # pep8-naming — exam requirement (docs/CONVENTIONS.md)
     "D",   # pydocstyle — docstring on every function, method and class
     "ANN", # type annotations everywhere
 ]

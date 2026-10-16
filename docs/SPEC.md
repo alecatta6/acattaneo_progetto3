@@ -48,7 +48,6 @@ Gestione ambiente: `uv`. Esportare anche `requirements.txt` (`uv export`) per l'
 
 ```
 acattaneo_progetto3/
-├── CLAUDE.md
 ├── README.md                    # setup, avvio API, esempi curl
 ├── Makefile
 ├── pyproject.toml / uv.lock / requirements.txt
@@ -96,6 +95,7 @@ acattaneo_progetto3/
 ├── notebooks/greenthumb_delivery.ipynb
 ├── tests/
 └── docs/
+    ├── CONVENTIONS.md            # convenzioni di codice e insidie delle librerie
     ├── SPEC.md
     ├── PLAN.md
     └── DECISIONS.md

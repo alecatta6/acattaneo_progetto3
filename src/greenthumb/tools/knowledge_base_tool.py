@@ -130,9 +130,9 @@ def _artifact(
         "doc_type": doc_type,
         "threshold": threshold,
         "best_similarity": max((h.similarity for h in all_hits), default=None),
-        # The chunk text travels in the artifact as well as in the content. It is duplicated
-        # on purpose: RAGAS scores faithfulness against the retrieved contexts themselves,
-        # and re-deriving them by parsing the formatted content would be fragile (ADR-059).
+        # Il testo del chunk viaggia nell'artifact oltre che nel contenuto. E' duplicato di
+        # proposito: RAGAS misura la faithfulness contro i contesti recuperati, e ricavarli
+        # facendo il parsing del contenuto formattato sarebbe fragile (ADR-059).
         "results": [
             {
                 "doc_id": hit.doc_id,

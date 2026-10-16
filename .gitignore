@@ -10,6 +10,9 @@ escalations.jsonl
 # (ADR-030). It is a measurement record, and SPEC 10.2's promise — recompute the metrics
 # without re-running the agent — only holds for whoever has the file (ADR-073).
 eval/results/smoke_traces.jsonl
+# Scritto da DeepEval al primo utilizzo: cache e configurazione locale sue.
+.deepeval
+.deepeval-cache.json
 
 # Python
 __pycache__/

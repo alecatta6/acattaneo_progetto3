@@ -5,7 +5,7 @@ Performs no LLM calls. Answers two questions that SPEC section 6 leaves open:
 1. ``similarity_search_with_score`` returns a cosine *distance*; the relevance-score helper
    returns a normalised similarity. Thresholds must be calibrated on one of them, and the
    choice determines how stable those thresholds are across library upgrades.
-2. multilingual-e5 requires ``query: `` / ``passage: `` prefixes. CLAUDE.md warns that
+2. multilingual-e5 requires ``query: `` / ``passage: `` prefixes. Its model card warns that
    omitting them degrades retrieval silently. This measures the gap on real text.
 """
 

@@ -197,9 +197,9 @@ def resolve_sources(cited: Sequence[str], evidence: TurnEvidence) -> list[str]:
     if intersection:
         return intersection
 
-    # Either the model cited nothing, or it cited only documents that do not exist. Both
-    # end here: a fabricated identifier never reaches the customer, and the documents the
-    # answer was actually built from are not lost (SPEC section 5).
+    # Qui ci si arriva in due casi: il modello non ha citato nulla, oppure ha citato solo
+    # documenti che non esistono. In entrambi un identificatore inventato non raggiunge il
+    # cliente, e i documenti su cui la risposta e' stata costruita non si perdono (SPEC §5).
     return available
 
 
@@ -222,12 +222,12 @@ def confidence_cap(evidence: TurnEvidence, score_low: float, score_high: float) 
         return "high" if best >= score_high else "medium"
 
     if evidence.order_lookup_succeeded:
-        # A structured source, exact by construction: no cap (SPEC section 5).
+        # Fonte strutturata, esatta per costruzione: nessun cap (SPEC §5).
         return "high"
 
-    # No tool ran. Either a refusal or a clarifying question, both legitimate, or the model
-    # answered from its own knowledge, which the prompt forbids. The two are
-    # indistinguishable from here, so the cautious reading applies (ADR-058).
+    # Nessun tool invocato. O e' un rifiuto o una domanda di chiarimento, entrambi
+    # legittimi, o il modello ha risposto con la sua conoscenza, che il prompt vieta. Da qui
+    # i due casi sono indistinguibili, quindi vale la lettura prudente (ADR-058).
     return "medium"
 
 
