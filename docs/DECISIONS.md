@@ -1619,3 +1619,37 @@ ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
   verifica su runtime Colab pulito richiede che i commit siano pubblicati su GitHub, perché
   la prima cella clona il repository: finché il push non avviene, su Colab il notebook
   clonerebbe una versione precedente. È l'ultimo passo di R10 e non è ancora fatto.
+
+## ADR-076 — Anche `import litellm` carica il `.env`, e questo rende obbligatorio un Secret
+
+- **Contesto**: scoperto verificando cosa serve davvero su Colab. Un controllo scritto per
+  rispondere alla domanda «il notebook gira con il solo `OPENAI_API_KEY`?» ha dato la risposta
+  sbagliata, e la causa è interessante.
+- **Misura**:
+
+  ```
+  prima di importare litellm: GREENTHUMB_LLM_MODEL in os.environ -> False
+  dopo  aver importato litellm: GREENTHUMB_LLM_MODEL in os.environ -> True
+  ```
+
+  `import litellm` chiama `load_dotenv()` come effetto collaterale, esattamente come
+  `import deepeval` (ADR-025). È la **quarta** manifestazione dello stesso problema, dopo
+  l'ambiente iniettato da DeepEval, il `.env` letto direttamente da `Settings` (ADR-044) e il
+  valore dimenticato nel `.env` che vinceva sul default calibrato (ADR-043, ADR-072).
+- **Perché mi ha ingannato**: un controllo che costruiva `Settings(_env_file=None)` **dopo**
+  aver importato `greenthumb.agent` leggeva `llm_model = 'openrouter/openai/gpt-4.1-mini'`,
+  cioè il valore del `.env`, pur avendo disabilitato la lettura del file. Lo stesso controllo
+  senza quell'import legge `''`. Non era `Settings` a sbagliare: era il file già riversato
+  nell'ambiente da un import fatto tre righe sopra.
+- **Conseguenza concreta sulla consegna**: su Colab non esiste alcun `.env` da cui ripiegare,
+  quindi `GREENTHUMB_LLM_MODEL` è un Secret **obbligatorio**, non opzionale. Il default in
+  `config.py` è la stringa vuota di proposito — un modello indovinato è peggio di un errore —
+  e `build_chat_model` solleva un `ValueError` che nomina il `.env` e i Secrets di Colab.
+- **Decisione**: il notebook dichiara quali Secrets sono obbligatori e quale è opzionale,
+  distingue i due casi nel messaggio che stampa quando uno manca, e deriva `HAS_KEY` da
+  **entrambi** i valori richiesti invece che dalla sola chiave. In locale esporta
+  nell'ambiente sia la chiave sia il modello letti da `Settings`.
+- **Lezione generale**: in questo ecosistema l'import di una libreria è un'operazione con
+  effetti collaterali sull'ambiente del processo. Qualunque verifica su «cosa serve davvero
+  per far partire il sistema» va fatta in un processo dove quelle librerie **non** sono state
+  importate, altrimenti misura la macchina di sviluppo invece dell'ambiente di consegna.

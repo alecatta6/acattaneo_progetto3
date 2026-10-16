@@ -33,7 +33,10 @@ make setup
 cp .env.example .env   # then fill in OPENAI_API_KEY
 ```
 
-`.env` is never committed. On Colab the same variables come from Secrets.
+`.env` is never committed. On Colab the same variables come from Secrets, and two of them
+are required rather than optional: `OPENAI_API_KEY` and `GREENTHUMB_LLM_MODEL`. There is no
+`.env` to fall back on there, and the model identifier has no safe default — a guessed model
+is worse than an error (ADR-076).
 
 ## Commands
 

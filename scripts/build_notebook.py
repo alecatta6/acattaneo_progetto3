@@ -68,8 +68,13 @@ stanno il codice, i test e il registro delle decisioni architetturali.
 ## Come leggere questo notebook
 
 Gli output delle celle sono **salvati**: si può leggere tutto senza rieseguire nulla e
-senza spendere chiamate al modello. Chi vuole rieseguire ha bisogno di un solo segreto,
-`OPENAI_API_KEY`, nei Secrets di Colab.
+senza spendere chiamate al modello.
+
+Chi vuole rieseguire deve impostare due Secrets di Colab: `OPENAI_API_KEY` e
+`GREENTHUMB_LLM_MODEL` (per esempio `openrouter/openai/gpt-4.1-mini`). Il secondo serve
+davvero: in locale arriva dal `.env`, su Colab non c'è nessun `.env` e senza quel valore
+l'agente non si costruisce. `GREENTHUMB_EVAL_MODEL` invece è opzionale, perché viene
+validato solo se si rilancia l'evaluation (ADR-010).
 
 Le sezioni 6, 7 e 9 effettuano chiamate reali al modello; le altre no. L'evaluation
 completa **non** viene rieseguita: il notebook carica i risultati già salvati nel
@@ -130,12 +135,15 @@ if IN_COLAB:
     )
     from google.colab import userdata  # noqa: PLC0415 - disponibile solo su Colab
 
-    # I nomi dei Secrets coincidono con quelli del .env (ADR-013).
-    for name in ("OPENAI_API_KEY", "GREENTHUMB_LLM_MODEL", "GREENTHUMB_EVAL_MODEL"):
+    # I nomi dei Secrets coincidono con quelli del .env (ADR-013). I primi due servono
+    # davvero: su Colab non c'e' nessun .env da cui ripiegare (ADR-076).
+    REQUIRED = ("OPENAI_API_KEY", "GREENTHUMB_LLM_MODEL")
+    for name in (*REQUIRED, "GREENTHUMB_EVAL_MODEL"):
         try:
             os.environ[name] = userdata.get(name)
         except Exception:
-            print(f"Secret {{name}} non impostato: le celle che lo usano verranno saltate.")
+            serve = "OBBLIGATORIO" if name in REQUIRED else "opzionale"
+            print(f"Secret {{name}} non impostato ({{serve}}).")
 else:
     # In locale si risale alla radice del repository, così il notebook funziona anche se
     # Jupyter viene avviato da notebooks/.
@@ -152,15 +160,19 @@ if not IN_COLAB:
     # trovino: su Colab il percorso e' l'opposto, dai Secrets all'ambiente.
     from greenthumb.config import get_settings  # noqa: PLC0415
 
-    _key = get_settings().openai_api_key
-    if _key is not None:
-        os.environ.setdefault("OPENAI_API_KEY", _key.get_secret_value())
+    _settings = get_settings()
+    if _settings.openai_api_key is not None:
+        os.environ.setdefault("OPENAI_API_KEY", _settings.openai_api_key.get_secret_value())
+    if _settings.llm_model:
+        os.environ.setdefault("GREENTHUMB_LLM_MODEL", _settings.llm_model)
 
-HAS_KEY = bool(os.environ.get("OPENAI_API_KEY"))
+HAS_KEY = bool(os.environ.get("OPENAI_API_KEY")) and bool(
+    os.environ.get("GREENTHUMB_LLM_MODEL")
+)
 print(f"Ambiente   : {{'Colab' if IN_COLAB else 'locale'}}")
 print(f"Repository : {{REPO_DIR}}")
 print(f"Python     : {{sys.version.split()[0]}}")
-print(f"Chiave LLM : {{'presente' if HAS_KEY else 'ASSENTE — le sezioni 6, 7 e 9 verranno saltate'}}")
+print(f"Segreti    : {{'presenti' if HAS_KEY else 'INCOMPLETI — le sezioni 6, 7 e 9 verranno saltate'}}")
 """
 )
 
