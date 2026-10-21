@@ -5,18 +5,18 @@
 Ogni requisito della consegna deve essere soddisfatto in un punto verificabile. Questa tabella
 va mantenuta aggiornata: a fine progetto è la checklist di consegna.
 
-| # | Requisito | Dove viene soddisfatto | Verificato |
+| # | Requisito | Dove viene soddisfatto | Stato della verifica |
 |---|---|---|---|
-| R1 | Agente ReAct con LangChain e LiteLLM | `src/greenthumb/agent.py` (§8) | ✅ `create_agent` + `ChatLiteLLM`; notebook §6 |
-| R2 | ≥3 tool: RAG sul catalogo, stato ordine, escalation | `src/greenthumb/tools/` (§7) | ✅ tre tool, casi limite in `scripts/demo_tools.py`; notebook §5 |
-| R3 | Memoria breve termine esplicita + lungo termine semantica | `memory.py` (§9), `retrieval.py` (§6) | ✅ summarization misurata (2/2 nell'eval); notebook §4 e §7 |
-| R4 | Output JSON: `answer`, `confidence`, `sources`, `needs_human` | `schemas.py`, `response.py` (§5) | ✅ `schema validity` 100% su 50 turni; test sul contratto a 4 campi |
-| R5 | KB 37 documenti + `orders.json` ≥24 ordini | `data/` (§4) | ✅ 37 documenti, 26 ordini, `make data` verde |
-| R6 | Eval ≥15 conversazioni, ≥1 metrica RAGAS + ≥1 DeepEval, con commento | `eval/` (§10) | ✅ 20 conversazioni, 2 RAGAS + 3 DeepEval + 6 deterministiche, confronto prima/dopo |
-| R7 | Deploy locale FastAPI con istruzioni di avvio | `api.py`, `README.md` (§11) | ✅ provato con server reale e i curl del README (ADR-074) |
-| R8 | Relazione tecnica: architettura, memoria, analisi eval | notebook §10 + `docs/DECISIONS.md` (§13) | ✅ 75 ADR; relazione in sei sottosezioni |
-| R9 | Naming inglese snake_case / CamelCase, docstring ovunque | tutto il codice, verificato da ruff | ✅ `make lint` pulito con regole `D`, `N`, `ANN` |
-| R10 | Consegna come notebook Colab pubblico | `notebooks/greenthumb_delivery.ipynb` (§13) | ⏳ notebook eseguito con output salvati; **resta da pubblicare su Colab dopo il push** |
+| R1 | Agente ReAct con LangChain e LiteLLM | `src/greenthumb/agent.py` (§8) | `create_agent` + `ChatLiteLLM`; notebook §6 |
+| R2 | ≥3 tool: RAG sul catalogo, stato ordine, escalation | `src/greenthumb/tools/` (§7) | tre tool, casi limite in `scripts/demo_tools.py`; notebook §5 |
+| R3 | Memoria breve termine esplicita + lungo termine semantica | `memory.py` (§9), `retrieval.py` (§6) | summarization misurata (2/2 nell'eval); notebook §4 e §7 |
+| R4 | Output JSON: `answer`, `confidence`, `sources`, `needs_human` | `schemas.py`, `response.py` (§5) | `schema validity` 100% su 50 turni; test sul contratto a 4 campi |
+| R5 | KB 37 documenti + `orders.json` ≥24 ordini | `data/` (§4) | 37 documenti, 26 ordini, `make data` verde |
+| R6 | Eval ≥15 conversazioni, ≥1 metrica RAGAS + ≥1 DeepEval, con commento | `eval/` (§10) | 20 conversazioni, 2 RAGAS + 3 DeepEval + 6 deterministiche, confronto prima/dopo |
+| R7 | Deploy locale FastAPI con istruzioni di avvio | `api.py`, `README.md` (§11) | provato con server reale e i curl del README (ADR-074) |
+| R8 | Relazione tecnica: architettura, memoria, analisi eval | notebook §10 + `docs/DECISIONS.md` (§13) | 76 ADR; relazione in cinque sottosezioni |
+| R9 | Naming inglese snake_case / CamelCase, docstring ovunque | tutto il codice, verificato da ruff | `make lint` pulito con regole `D`, `N`, `ANN` |
+| R10 | Consegna come notebook Colab pubblico | `notebooks/greenthumb_delivery.ipynb` (§13) | notebook pubblicato e leggibile con gli output salvati; **in attesa dell'esecuzione su runtime Colab pulito** |
 
 ## 2. Stack
 
@@ -66,7 +66,9 @@ acattaneo_progetto3/
 │   ├── probe_retrieval.py       # calibrazione soglie (fase 2)
 │   ├── ablation_e5_prefixes.py  # ablazione sui prefissi e5 (ADR-046)
 │   ├── demo_tools.py            # demo dei tre tool, senza LLM (fase 3)
-│   └── demo_memory.py           # demo della summarization (fase 5)
+│   ├── demo_memory.py           # demo della summarization (fase 5)
+│   ├── build_notebook.py        # genera il notebook di consegna (ADR-075)
+│   └── spikes/                  # verifica delle API delle librerie (fase 0)
 ├── src/greenthumb/
 │   ├── config.py                # Settings (pydantic-settings o dataclass)
 │   ├── clock.py                 # Clock protocol + FrozenClock / SystemClock
@@ -91,14 +93,16 @@ acattaneo_progetto3/
 │   ├── metrics_ragas.py
 │   ├── metrics_deepeval.py
 │   ├── metrics_deterministic.py
+│   ├── report.py                # genera summary.md dai punteggi salvati (ADR-069)
 │   └── results/                 # output versionati (json + summary.md)
 ├── notebooks/greenthumb_delivery.ipynb
 ├── tests/
 └── docs/
-    ├── CONVENTIONS.md            # convenzioni di codice e insidie delle librerie
+    ├── CONVENTIONS.md           # convenzioni di codice e insidie delle librerie
     ├── SPEC.md
     ├── PLAN.md
-    └── DECISIONS.md
+    ├── DECISIONS.md
+    └── RETRIEVAL_CALIBRATION.md # tabelle complete della calibrazione (fase 2)
 ```
 
 ## 4. Dati

@@ -2,6 +2,11 @@
 .env
 .env.local
 
+# Working notes and tooling configuration: process artefacts, not deliverables
+CLAUDE.md
+.claude/
+docs/contesto-sessione.md
+
 # Generated artefacts (rebuilt by `make index` / produced at runtime)
 vector_store/
 escalations.jsonl

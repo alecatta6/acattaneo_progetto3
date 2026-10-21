@@ -5,24 +5,46 @@ fictional gardening e-commerce (seeds, bulbs, tools, pots, soils, fertilisers). 
 product, agronomic, order and returns questions from a curated knowledge base, and recognises when
 a human operator is needed.
 
-Master's project in AI Solution Architecture. The final deliverable is a public Google Colab
-notebook that clones this repository; the repository is where the work happens.
+**[Open the annotated notebook in Colab](https://colab.research.google.com/github/alecatta6/acattaneo_progetto3/blob/main/notebooks/greenthumb_delivery.ipynb)**
+— a guided walkthrough of the whole system with the technical report and the saved output of
+every cell, so it reads without being re-run.
 
-**[Open the delivery notebook in Colab](https://colab.research.google.com/github/alecatta6/acattaneo_progetto3/blob/main/notebooks/greenthumb_delivery.ipynb)**
-— it carries the technical report and the saved outputs of every cell, so it can be read
-without being re-run. Running it needs two Colab Secrets (below).
+## What it does
 
-> **Status: phase 9 (delivery notebook).** Phases 0-8 are complete: data, retrieval, tools,
-> agent, memory, response assembly, evaluation and API. See [docs/PLAN.md](docs/PLAN.md) for the
-> phase ordering and [eval/results/summary.md](eval/results/summary.md) for the measured results.
+A LangChain ReAct loop over three tools: semantic search across a 37-document knowledge base,
+order lookup, and escalation to a human operator. Every reply is a four-field JSON contract, and
+**only one of those fields comes from the model**:
+
+| Field | Produced by | Why |
+|---|---|---|
+| `answer` | the model | it is the text the customer reads |
+| `sources` | code | the citations the model made, intersected with what retrieval actually returned above threshold |
+| `needs_human` | code | derived from the session's escalation register, a file |
+| `confidence` | both | the lower of the model's proposal and a cap computed from retrieval scores |
+
+A fabricated citation therefore cannot reach the customer, and a flag inconsistent with the
+actions taken is not representable. Dates come from an injected clock rather than the wall
+clock, so order deadlines and seasonal advice stay reproducible.
+
+## Measured, not asserted
+
+Twenty conversations and fifty turns, scored with RAGAS, DeepEval and deterministic metrics:
+schema validity 100%, `needs_human` accuracy 96%, no fallback on any turn. Two metrics score
+low on behaviour that is in fact correct, and the reasons are written down rather than tuned
+away — [eval/results/summary.md](eval/results/summary.md) carries the numbers, the three worst
+cases and a before/after comparison of one corrective change.
 
 ## Documentation
 
 | Document | Contents |
 |---|---|
 | [docs/SPEC.md](docs/SPEC.md) | Technical specification and requirement traceability |
-| [docs/PLAN.md](docs/PLAN.md) | Phased work plan with a Definition of Done per phase |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | Architecture decision records — the source material for the report |
+| [docs/PLAN.md](docs/PLAN.md) | How the work was organised, and the closing criterion of each stage |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | Architecture decision records: context, rejected alternatives, consequences |
+| [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | Code conventions and library pitfalls, with the measurements that disprove one |
+| [docs/RETRIEVAL_CALIBRATION.md](docs/RETRIEVAL_CALIBRATION.md) | Threshold calibration: queries, scores, chunking comparison |
+
+Coursework for a Master's in AI Solution Architecture; the notebook above is the deliverable.
 
 ## Requirements
 
