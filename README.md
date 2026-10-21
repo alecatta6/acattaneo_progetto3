@@ -8,9 +8,13 @@ a human operator is needed.
 Master's project in AI Solution Architecture. The final deliverable is a public Google Colab
 notebook that clones this repository; the repository is where the work happens.
 
-> **Status: phase 8 (API).** Phases 0-7 are complete: data, retrieval, tools, agent, memory,
-> response assembly and evaluation. See [docs/PLAN.md](docs/PLAN.md) for the phase ordering and
-> [eval/results/summary.md](eval/results/summary.md) for the measured results.
+**[Open the delivery notebook in Colab](https://colab.research.google.com/github/alecatta6/acattaneo_progetto3/blob/main/notebooks/greenthumb_delivery.ipynb)**
+— it carries the technical report and the saved outputs of every cell, so it can be read
+without being re-run. Running it needs two Colab Secrets (below).
+
+> **Status: phase 9 (delivery notebook).** Phases 0-8 are complete: data, retrieval, tools,
+> agent, memory, response assembly, evaluation and API. See [docs/PLAN.md](docs/PLAN.md) for the
+> phase ordering and [eval/results/summary.md](eval/results/summary.md) for the measured results.
 
 ## Documentation
 
