@@ -1,0 +1,19 @@
+{
+  "model": "sonnet",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.venv/**)",
+      "Read(./vector_store/**)",
+      "Read(./uv.lock)",
+      "Read(./.pytest_cache/**)",
+      "Read(./.ruff_cache/**)",
+      "Read(./**/__pycache__/**)",
+      "Read(./.deepeval)",
+      "Read(./.deepeval-cache.json)",
+      "Read(./escalations.jsonl)",
+      "Read(./.DS_Store)"
+    ]
+  }
+}
