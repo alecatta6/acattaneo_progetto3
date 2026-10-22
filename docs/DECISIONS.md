@@ -4,6 +4,27 @@ Formato: contesto → decisione → alternative scartate → conseguenze.
 Questo file è la fonte primaria della relazione tecnica. Aggiungere una voce per ogni scelta non
 ovvia, inclusi gli esiti degli spike della fase 0 e i numeri delle calibrazioni.
 
+## Da dove iniziare
+
+Il registro è lungo per costruzione: 76 voci, scritte mentre le decisioni venivano prese. Non va
+letto in sequenza. Queste tredici bastano a capire il sistema; le altre sono il dettaglio di
+singoli problemi, richiamate per numero dal codice e dalla relazione.
+
+| Tema | Voci | In una riga |
+|---|---|---|
+| Il principio di fondo | ADR-002 | dei quattro campi della risposta solo `answer` viene dall'LLM |
+| Data simulata | ADR-003 | un `Clock` iniettato, così ordini ed evaluation non invecchiano |
+| Memoria | ADR-004, ADR-056 | summarization invece di trimming, e la soglia misurata invece che stimata |
+| I due campi di instradamento | ADR-007, ADR-008 | `confidence` qualifica, `needs_human` instrada, e vale per la sessione |
+| Retrieval | ADR-040, ADR-045 | soglie calibrate su dati reali, con una separazione di soli +0.0132 |
+| Provider e giudici | ADR-029, ADR-033 | OpenRouter via LiteLLM, e due forme dello stesso identificatore |
+| Il rischio sciolto per primo | ADR-027 | gli artifact dei tool sono leggibili, quindi ADR-002 è realizzabile |
+| Risultati | ADR-070, ADR-071 | cosa l'evaluation ha trovato, e il costo dell'intervento correttivo |
+
+Le voci che raccontano un fallimento silenzioso — un difetto che non produce errori, solo numeri
+sbagliati — sono ADR-019, ADR-025, ADR-043, ADR-047, ADR-056 e ADR-061. Sono quelle da cui
+questo progetto ha imparato di più.
+
 ---
 
 ## ADR-001 — Sviluppo in repository locale, consegna via notebook Colab

@@ -930,149 +930,95 @@ md(
 ---
 # 10. Relazione tecnica
 
-## 10.1 Il principio che governa l'architettura
+## 10.1 Architettura
 
-**Deterministico prima del probabilistico.** L'LLM decide *cosa dire* e *quale strumento
-usare*; tutto ciò che può essere calcolato dal codice viene calcolato dal codice.
+Un loop ReAct (`create_agent`) su tre tool: ricerca semantica nella knowledge base, lettura
+dello stato ordine, escalation a un operatore. Il modello arriva attraverso LiteLLM, quindi il
+provider si sostituisce senza toccare il codice dell'agente.
 
-Concretamente, dei quattro campi della risposta **uno solo** è generato dal modello:
+La scelta portante è una sola: **deterministico prima del probabilistico**. Dei quattro campi
+della risposta, solo `answer` viene dal modello.
 
-| Campo | Origine | Perché |
+| Campo | Origine | Come si ottiene |
 |---|---|---|
-| `answer` | LLM | è il testo per il cliente |
-| `sources` | codice | intersezione fra ciò che il modello cita e ciò che il retrieval ha davvero restituito sopra soglia |
-| `needs_human` | codice | derivato dal registro delle escalation della sessione, un file |
-| `confidence` | entrambi | minimo fra la proposta del modello e un cap basato sugli score del retrieval |
+| `answer` | modello | è il testo che legge il cliente |
+| `sources` | codice | le citazioni del modello, intersecate con i documenti che il retrieval ha davvero restituito sopra soglia |
+| `needs_human` | codice | vero se la sessione ha un ticket di escalation aperto |
+| `confidence` | entrambi | il minore fra la proposta del modello e un tetto calcolato sugli score del retrieval |
 
-Il guadagno non è teorico: una fonte inventata **non può** raggiungere il cliente, e un
-flag incoerente con le azioni svolte non è rappresentabile. In più, tre metriche
-dell'evaluation diventano calcolabili senza giudice, e quindi gratuite e ripetibili.
+Il risultato pratico: una fonte inventata non può raggiungere il cliente, e un flag incoerente
+con le azioni svolte non è rappresentabile. Il prezzo è un livello di assemblaggio in più
+(`response.py`) e il vincolo che i tool restituiscano i propri metadati in forma leggibile: era
+il rischio più grave del progetto, verificato con uno spike prima di scrivere codice di
+produzione (ADR-027).
 
-Il prezzo è un livello di assemblaggio in più (`response.py`) e la necessità che i tool
-restituiscano i propri metadati come *artifact* leggibile. Era il rischio architetturale più
-grave del progetto — se il passo di output strutturato avesse nascosto i `ToolMessage`,
-l'intero disegno sarebbe stato irrealizzabile — ed è stato verificato con uno spike **prima**
-di scrivere una riga di codice di produzione (ADR-027).
+La data non viene dall'orologio di sistema ma da un `Clock` iniettato, fissato al 12 ottobre
+2026. Così ordini, consigli stagionali e ground truth dell'evaluation restano coerenti a
+distanza di mesi (ADR-003).
 
-## 10.2 La memoria, nelle sue due forme
+## 10.2 Memoria
 
-**Lungo termine, semantica**: knowledge base di 37 documenti, chunking guidato dagli
-heading, embedding locali `multilingual-e5-base`, Chroma persistente, top-k 4 con soglia
-calibrata. Locale e non via API: nessun costo di indicizzazione e nessun secondo provider da
-configurare su Colab (ADR-005).
+**Lungo termine, semantica**: 37 documenti, chunking guidato dagli heading, embedding
+`multilingual-e5-base` eseguiti in locale, Chroma persistente, top-k 4 con soglia di rilevanza.
+Embedding locali e non via API: nessun costo di indicizzazione e nessun secondo provider da
+configurare per chi esegue il notebook.
 
-**Breve termine, esplicita**: summarization con trigger a 6000 token e ultimi 6 messaggi
-mantenuti integri, checkpointer in memoria con `thread_id = session_id`.
+Le soglie sono calibrate, non scelte: 20 query di prova, formulate senza riusare le frasi dei
+documenti, perché usarle gonfierebbe gli score. La separazione fra query pertinenti e fuori
+tema è di soli **+0.0132**, quindi la soglia non è un confine affidabile. Per questo non è
+l'unico presidio: il prompt istruisce il rifiuto esplicito, e il tetto sulla confidence dichiara
+incerta una risposta borderline (ADR-040).
 
-La scelta di summarization invece di trimming è il punto da argomentare. Nel customer care
-la conversazione tipica cita un numero d'ordine al primo turno e lo riprende molti turni
-dopo in forma pronominale. Il trimming, che scarta i messaggi più vecchi, perderebbe
-proprio l'entità più utile. L'alternativa più robusta — trimming più estrazione delle entità
-in uno stato strutturato — sarebbe più deterministica e va citata come evoluzione naturale:
-costa più codice, e il riassunto ha il vantaggio di conservare anche i vincoli sfumati
-(«coltivo sul balcone, poco sole») che nessuno schema di entità avrebbe previsto.
+**Breve termine**: summarization, non trimming. Nel customer care il numero d'ordine citato al
+primo turno torna dieci turni dopo in forma pronominale: il trimming perderebbe proprio
+l'entità più utile, mentre il riassunto conserva anche i vincoli sfumati del cliente
+("coltivo sul balcone, poco sole"). Costa una chiamata in più quando scatta.
 
-Tre cose, su questo meccanismo, le ha insegnate solo la misura:
+Due cose le ha insegnate solo la misura. La soglia si confronta con il totale di token
+dell'**intera richiesta**, schemi dei tool compresi: il valore previsto stava sotto il pavimento
+della prima chiamata, quindi la summarization sarebbe scattata prima di ogni risposta senza che
+un test diventasse rosso (ADR-056). E una memoria che funziona può non servire a nulla: finché
+il prompt non dichiarava la conversazione passata conoscenza legittima, l'agente negava di avere
+accesso a un numero d'ordine che aveva in contesto (ADR-057).
 
-1. **La soglia non si confronta con i token della conversazione**, ma con il totale che il
-   provider riporta per l'intera richiesta, schemi dei tool e system prompt inclusi. Il
-   valore inizialmente previsto, 2500, era *sotto il pavimento* di 2583 della prima
-   chiamata: la summarization sarebbe scattata prima di ogni singola chiamata, e nessun test
-   lo avrebbe rilevato — i test di memoria sarebbero stati *più* verdi, non meno. Il sintomo
-   sarebbe arrivato dalla bolletta (ADR-056).
-2. **Una memoria che funziona può non servire a nulla** se il prompt non la considera
-   conoscenza legittima (ADR-057, sezione 7).
-3. **Una retention perfetta può misurare il nulla.** Finché la soglia non viene superata, il
-   dato del primo turno sopravvive banalmente. La metrica che lo ha smascherato esisteva
-   proprio per questo (ADR-072).
+## 10.3 Risultati
 
-## 10.3 Cosa dice l'evaluation, e cosa non può dire
+Venti conversazioni, cinquanta turni. Metriche deterministiche: schema valido sul 100% dei
+turni, `needs_human` corretto al 96%, nessuna risposta di ripiego. RAGAS e DeepEval aggiungono
+faithfulness, qualità del ranking, pertinenza, correttezza dell'escalation e tenuta della
+memoria.
 
-I numeri sono nella sezione 8. Qui conta il metodo.
+Due punteggi bassi sono artefatti della metrica, non difetti del sistema, e restano dichiarati
+invece di essere corretti. `faithfulness` a zero sugli edge case: un rifiuto non contiene
+affermazioni da sostenere. `source recall` al 54%: circa un terzo dei fallimenti sono
+aspettative troppo strette del dataset, dove l'agente cita una guida diversa che contiene lo
+stesso dato e risponde correttamente. Allargare quelle aspettative dopo aver visto la metrica
+sarebbe il modo più rapido di rendere inutile un benchmark.
 
-**Tre livelli di misura, con fiducia decrescente.** Le metriche deterministiche confrontano
-fatti con fatti e non hanno margine d'errore. Le metriche RAGAS misurano la risposta contro
-i contesti recuperati, che sono dati reali, ma col giudizio di un modello. Le metriche
-DeepEval giudicano qualità e pertinenza, e sono le più esposte alla calibrazione del
-giudice — due di esse danno punteggi bassi su comportamenti **corretti**, come documentato.
+Il dataset è ground truth, quindi è verificato come tale: 17 test lo confrontano con la
+knowledge base e gli ordini reali. Alla prima esecuzione hanno trovato tre difetti nel dataset,
+non nell'agente.
 
-**Il dataset è ground truth, quindi va verificato come tale.** Diciassette test lo
-confrontano con la knowledge base e gli ordini reali, caricati dagli stessi moduli che usa
-l'agente: un `doc_id` sbagliato non solleverebbe nulla, abbasserebbe `source_recall` in
-silenzio, e il report attribuirebbe all'agente un difetto del dataset. Alla prima esecuzione
-quei test hanno trovato tre difetti reali (ADR-063).
+## 10.4 Limiti noti
 
-**Ciò che l'evaluation non può dire.** Venti conversazioni misurano venti conversazioni. Un
-terzo dei fallimenti di `source recall` dipende da aspettative troppo strette del dataset —
-l'agente cita una guida diversa che contiene lo stesso dato e risponde correttamente — e
-quelle aspettative **non** sono state allargate a posteriori, perché ritoccare il ground
-truth dopo aver visto la metrica è il modo più rapido di rendere inutile un benchmark
-(ADR-045). Resta inoltre la variabilità del fornitore: OpenRouter smista fra infrastrutture
-a monte e il pinning non è implementabile attraverso LiteLLM, quindi due esecuzioni
-identiche possono divergere — se n'è visto un caso pulito, lo stesso turno che cerca nella
-knowledge base in un'esecuzione e non cerca in un'altra, a prompt identico (ADR-030).
+- **Nessuna autenticazione del cliente**: chi conosce un numero d'ordine ne vede i dettagli.
+  È il limite più serio del sistema.
+- **Sessioni volatili**: il checkpointer è in memoria, un riavvio del processo le perde.
+- **Venti conversazioni** sono un campione piccolo per generalizzare.
+- **Un difetto misurato e non corretto**: su una domanda di policy coperta dalla knowledge base
+  l'agente apre ancora un ticket invece di rispondere (ADR-071).
+- **Riproducibilità imperfetta**: OpenRouter smista le richieste fra fornitori a monte, e il
+  vincolo a uno solo non è implementabile attraverso LiteLLM (ADR-030).
 
-## 10.4 Il costo di un ecosistema in movimento
+## 10.5 Sviluppi futuri
 
-Vale la pena registrarlo, perché è la parte del lavoro che nessuna specifica prevede.
+Autenticazione del cliente e checkpointer persistente, cioè i due limiti qui sopra. Ricerca con
+diversificazione (MMR), perché su una domanda a due facce il top-k può esaurirsi su un solo
+documento (ADR-068). Re-ranking come esperimento misurato. Il ticket di escalation **in
+aggiunta** alla risposta invece che al suo posto (ADR-071).
 
-- `import ragas` falliva all'installazione pulita: RAGAS importa `ChatVertexAI` da
-  `langchain_community` in modo incondizionato, e la 0.4.x di quel pacchetto ha svuotato
-  `chat_models/`. Serve un pin esplicito a `0.3.31`, l'unica versione che contiene ancora
-  quel modulo *ed* è compatibile con il core richiesto da langchain 1.4.2. Il pin è fragile
-  per costruzione e va rivisitato a ogni aggiornamento (ADR-019).
-- `import deepeval` chiama `load_dotenv()` come effetto collaterale e installa un plugin
-  pytest: i test unitari sono diventati rossi **nel momento in cui è comparso un `.env`**,
-  senza che una riga di codice cambiasse. L'isolamento dei test dalla configurazione locale
-  va imposto attivamente, e si è ripresentato da tre direzioni diverse prima di essere
-  chiuso (ADR-025, ADR-044).
-- Un parametro annotato `RunnableConfig | None = None` — la scrittura apparentemente
-  prudente — **disattiva l'iniezione** del contesto e, con schema inferito, espone il
-  parametro fra quelli che il modello può riempire. Tutte le conversazioni finivano in
-  un'unica sessione condivisa, senza alcun errore (ADR-047).
-- Gli avvertimenti ereditati vanno misurati sul proprio corpus: «senza i prefissi e5 la
-  qualità del retrieval crolla in modo silenzioso» **non è confermato** da nessuna delle
-  quattro misure fatte. I prefissi si mantengono perché sono l'uso documentato del modello e
-  non costano nulla, non perché siano critici (ADR-046).
-
-Il filo comune è il **fallimento silenzioso**: nessuno di questi problemi produce un errore.
-Producono numeri sbagliati, sessioni condivise, filtri disattivati. È la ragione per cui in
-questo progetto i valori di configurazione che disattivano un presidio non sono valori
-ammissibili: un validatore rifiuta una soglia di rilevanza a zero e un trigger di
-summarization sotto il pavimento misurato, citando il valore corretto e il documento che lo
-giustifica (ADR-043, ADR-056).
-
-## 10.5 Limiti noti
-
-Dichiarati, non nascosti:
-
-- **Nessuna autenticazione del cliente.** `get_order_status` rivela i dettagli di un ordine
-  a chiunque ne conosca il numero. In produzione servirebbe verificare l'identità
-  confrontando l'email dell'ordine. È il limite più serio del sistema.
-- **Sessioni volatili.** Il checkpointer è in memoria: un riavvio del processo perde tutte
-  le conversazioni. Lo scambio con un checkpointer persistente è un argomento.
-- **Venti conversazioni di evaluation** sono un campione piccolo, e due metriche giudicate
-  penalizzano comportamenti corretti (i rifiuti).
-- **Un difetto residuo misurato e non corretto**: su una domanda di policy a cui la
-  knowledge base risponde, l'agente apre ancora un ticket invece di rispondere. Una seconda
-  iterazione sul prompt è l'ipotesi naturale, ma accumulare modifiche eseguendo l'evaluation
-  dopo ognuna porta al sovradattamento su venti conversazioni.
-- **Riproducibilità imperfetta** per il routing di OpenRouter fra fornitori a monte.
-- **Un dettaglio estetico**: il middleware di summarization premette al riassunto una frase
-  **in inglese** non configurabile, dentro una conversazione interamente italiana.
-
-## 10.6 Sviluppi futuri
-
-- Autenticazione del cliente e checkpointer persistente: i due limiti di cui sopra.
-- **Ricerca con diversificazione (MMR).** Sulla domanda sulle forbici i quattro risultati di
-  top-k sono tutti sezioni dello stesso documento: su una domanda a due facce — un prodotto
-  *e* una policy — il top-k può esaurirsi su un solo documento e lasciare metà domanda senza
-  fonte. È un'ipotesi già formulata e misurabile (ADR-068).
-- **Re-ranking** come esperimento misurato, con e senza.
-- **Trimming più stato strutturato delle entità** come alternativa più deterministica alla
-  summarization.
-- **Il ticket in aggiunta alla risposta, non al posto suo**: la direzione indicata dal costo
-  misurato dell'intervento correttivo.
+Il perché di ogni scelta, con le alternative scartate e le loro conseguenze, è in
+`docs/DECISIONS.md`, richiamato per numero qui sopra.
 
 ---
 
